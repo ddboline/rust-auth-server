@@ -1,10 +1,11 @@
 use actix::{Actor, SyncContext};
 use diesel::pg::PgConnection;
 use diesel::r2d2::{ConnectionManager, Pool};
-use chrono::NaiveDateTime;
+use chrono::{NaiveDateTime, Local};
 use uuid::Uuid;
+use std::convert::From;
 
-use schema::{users,invitations};
+use schema::{users, invitations};
 
 /// This is db executor actor. can be run in parallel
 pub struct DbExecutor(pub Pool<ConnectionManager<PgConnection>>);
@@ -26,9 +27,12 @@ pub struct User {
 }
 
 impl User {
-    pub fn remove_pwd(mut self) -> Self {
-        self.password = "".to_string();
-        self
+    pub fn with_details(email: String, password: String) -> Self {
+        User {
+            email,
+            password,
+            created_at: Local::now().naive_local(),
+        }
     }
 }
 
@@ -38,4 +42,17 @@ pub struct Invitation {
     pub id: Uuid,
     pub email: String,
     pub expires_at: NaiveDateTime,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SlimUser {
+    email: String,
+}
+
+impl From<User> for SlimUser {
+    fn from(user: User) -> Self {
+        SlimUser {
+            email: user.email
+        }
+    }
 }

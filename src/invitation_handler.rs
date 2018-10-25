@@ -28,18 +28,12 @@ impl Handler<CreateInvitation> for DbExecutor {
             expires_at: Local::now().naive_local() + Duration::hours(24),
         };
 
-        diesel::insert_into(invitations)
+        let inserted_invitation = diesel::insert_into(invitations)
             .values(&new_invitation)
-            .execute(conn)
-            .map_err(|error| {
-                println!("{:#?}",error);
-                ServiceError::InternalServerError
-            })?;
-        let mut items = invitations
-            .filter(id.eq(&new_invitation.id))
-            .load::<Invitation>(conn)
-            .map_err(|_error| ServiceError::InternalServerError)?;
+            .get_result(conn)?;
 
-        Ok(items.pop().unwrap())
+        Ok(inserted_invitation)
     }
 }
+
+
