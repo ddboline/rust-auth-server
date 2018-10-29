@@ -32,3 +32,4 @@ __Shameless plug:__ `sparkpost` is my crate please leave feedback if you like/di
 Read the full tutorial series on [hgill.io](https://hgill.io) 
  
 - [Auth Web Microservice with rust using Actix-Web - Complete Tutorial Part 1](https://hgill.io/posts/auth-microservice-rust-actix-web-diesel-complete-tutorial-part-1/)
+- [Auth Web Microservice with rust using Actix-Web - Complete Tutorial Part 2](https://hgill.io/posts/auth-microservice-rust-actix-web-diesel-complete-tutorial-part-2/)
