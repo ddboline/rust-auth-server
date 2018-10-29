@@ -46,7 +46,7 @@ pub struct Invitation {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SlimUser {
-    email: String,
+    pub email: String,
 }
 
 impl From<User> for SlimUser {

@@ -4,7 +4,7 @@ use errors::ServiceError;
 use models::{DbExecutor, User, SlimUser};
 use bcrypt::verify;
 use actix_web::{FromRequest, HttpRequest, middleware::identity::RequestIdentity};
-use utils::verify_token;
+use utils::decode_token;
 
 #[derive(Debug, Deserialize)]
 pub struct AuthData {
@@ -49,8 +49,7 @@ impl<S> FromRequest<S> for LoggedUser {
     type Result = Result<LoggedUser, ServiceError>;
     fn from_request(req: &HttpRequest<S>, _: &Self::Config) -> Self::Result {
         if let Some(identity) = req.identity() {
-            println!("{}", &identity);
-            let user: SlimUser = verify_token(&identity)?;
+            let user: SlimUser = decode_token(&identity)?;
             return Ok(user as LoggedUser);
         }
         Err(ServiceError::Unauthorized)

@@ -11,7 +11,7 @@ extern crate dotenv;
 extern crate futures;
 extern crate r2d2;
 extern crate uuid;
-//extern crate simple_jwt as jwt;
+extern crate jsonwebtoken as jwt;
 #[macro_use]
 extern crate diesel;
 #[macro_use]
