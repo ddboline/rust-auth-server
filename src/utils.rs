@@ -1,11 +1,10 @@
 use bcrypt::{hash, DEFAULT_COST};
+use chrono::{Duration, Local};
 use errors::ServiceError;
-use std::env;
+use jwt::{decode, encode, Header, Validation};
 use models::SlimUser;
 use std::convert::From;
-use jwt::{decode, encode, Header, Validation};
-use chrono::{Local, Duration};
-
+use std::env;
 
 pub fn hash_password(plain: &str) -> Result<String, ServiceError> {
     // get the hashing cost from the env variable or use default
@@ -13,6 +12,7 @@ pub fn hash_password(plain: &str) -> Result<String, ServiceError> {
         Ok(cost) => cost.parse().unwrap_or(DEFAULT_COST),
         _ => DEFAULT_COST,
     };
+    println!("{}", &hashing_cost);
     hash(plain, hashing_cost).map_err(|_| ServiceError::InternalServerError)
 }
 
@@ -28,7 +28,6 @@ struct Claims {
     exp: i64,
     // user email
     email: String,
-
 }
 
 // struct to get converted to token and back
@@ -46,7 +45,9 @@ impl Claims {
 
 impl From<Claims> for SlimUser {
     fn from(claims: Claims) -> Self {
-        SlimUser { email: claims.email }
+        SlimUser {
+            email: claims.email,
+        }
     }
 }
 
@@ -63,5 +64,5 @@ pub fn decode_token(token: &str) -> Result<SlimUser, ServiceError> {
 }
 
 fn get_secret() -> String {
-    env::var("JWT_SECRET").unwrap_or("my secret".into())
+    env::var("JWT_SECRET").unwrap_or_else(|_| "my secret".into())
 }

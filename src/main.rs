@@ -12,6 +12,7 @@ extern crate futures;
 extern crate r2d2;
 extern crate uuid;
 extern crate jsonwebtoken as jwt;
+extern crate sparkpost;
 #[macro_use]
 extern crate diesel;
 #[macro_use]
@@ -30,6 +31,7 @@ mod invitation_routes;
 mod register_handler;
 mod register_routes;
 mod utils;
+mod email_service;
 
 use models::DbExecutor;
 use actix::prelude::*;
