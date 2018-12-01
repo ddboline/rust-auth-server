@@ -1,6 +1,6 @@
 ##### What?
 
-We are going to create a web-server in `rust` that only deals with user registration and authentication. I will be explaining the steps in each file as we go. The complete project code is here [repo](https://gitlab.com/mygnu/rust-auth-server/tree/part_one). Please take all this with a pinch of salt as I'm a still a noob to rust 😉.
+We are going to create a web-server in `rust` that only deals with user registration and authentication. I will be explaining the steps in each file as we go. The complete project code is here [repo](https://gitlab.com/mygnu/rust-auth-server). Please take all this with a pinch of salt as I'm a still a noob to rust 😉.
 
 ##### Flow of the event would look like this:
 
