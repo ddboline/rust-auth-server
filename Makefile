@@ -27,4 +27,3 @@ package:
 
 install:
 	cp target/$(build_type)/rust_auth_server_bin /usr/bin/rust-auth-server
-	cp python/strava_upload.py /usr/bin/strava-upload
