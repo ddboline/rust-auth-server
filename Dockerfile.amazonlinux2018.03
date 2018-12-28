@@ -1,0 +1,16 @@
+FROM lambci/lambda:build-provided
+MAINTAINER Daniel Boline
+
+RUN yum install -y gcc g++ zip && \
+    curl https://sh.rustup.rs > rustup.sh && \
+    sh rustup.sh -y && \
+    . ~/.cargo/env
+
+WORKDIR /rust-auth-server
+
+ADD Cargo.toml /rust-auth-server
+ADD src /rust-auth-server/src
+ADD scripts /rust-auth-server/scripts
+ADD lambda /rust-auth-server/lambda
+ADD Makefile /rust-auth-server
+ADD python /rust-auth-server/python
