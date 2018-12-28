@@ -21,7 +21,7 @@ cleanup:
 
 package:
 	docker run --cidfile $(cidfile) -v `pwd`/target:/rust-auth-server/target rust-auth-server/build_rust:ubuntu18.04 /rust-auth-server/scripts/build_deb_docker.sh $(version) $(release)
-	docker cp `cat $(cidfile)`:/rust-auth-server/rust-auth-server_$(version)-$(release)_amd64.deb .
+	docker cp `cat $(cidfile)`:/rust-auth-server/rust-auth_$(version)-$(release)_amd64.deb .
 	docker rm `cat $(cidfile)`
 	rm $(cidfile)
 
