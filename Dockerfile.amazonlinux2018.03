@@ -11,6 +11,4 @@ WORKDIR /rust-auth-server
 ADD Cargo.toml /rust-auth-server
 ADD src /rust-auth-server/src
 ADD scripts /rust-auth-server/scripts
-ADD lambda /rust-auth-server/lambda
 ADD Makefile /rust-auth-server
-ADD python /rust-auth-server/python
