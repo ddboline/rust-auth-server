@@ -1,8 +1,7 @@
-use actix_web::{error::ResponseError, HttpResponse};
-use std::convert::From;
+use actix_web::{error::ResponseError, http::StatusCode, HttpResponse};
 use diesel::result::{DatabaseErrorKind, Error};
+use std::convert::From;
 use uuid::ParseError;
-
 
 #[derive(Fail, Debug)]
 pub enum ServiceError {
@@ -20,9 +19,17 @@ pub enum ServiceError {
 impl ResponseError for ServiceError {
     fn error_response(&self) -> HttpResponse {
         match *self {
-            ServiceError::InternalServerError => HttpResponse::InternalServerError().json("Internal Server Error, Please try later"),
+            ServiceError::InternalServerError => {
+                HttpResponse::InternalServerError().json("Internal Server Error, Please try later")
+            }
             ServiceError::BadRequest(ref message) => HttpResponse::BadRequest().json(message),
-            ServiceError::Unauthorized => HttpResponse::Unauthorized().json("Unauthorized")
+            ServiceError::Unauthorized => HttpResponse::build(StatusCode::OK)
+                .content_type("text/html; charset=utf-8")
+                .body(
+                    include_str!("../static/login.html")
+                        .replace("main.css", "../auth/main.css")
+                        .replace("main.js", "../auth/main.js"),
+                ),
         }
     }
 }
@@ -47,7 +54,7 @@ impl From<Error> for ServiceError {
                 }
                 ServiceError::InternalServerError
             }
-            _ => ServiceError::InternalServerError
+            _ => ServiceError::InternalServerError,
         }
     }
 }

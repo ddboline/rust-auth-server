@@ -4,6 +4,7 @@ use futures::future::Future;
 use app::AppState;
 use email_service::send_invitation;
 use invitation_handler::CreateInvitation;
+use std::env;
 
 pub fn register_email(
     (signup_invitation, state): (Json<CreateInvitation>, State<AppState>),
@@ -14,9 +15,12 @@ pub fn register_email(
         .from_err()
         .and_then(|db_response| match db_response {
             Ok(invitation) => {
-                send_invitation(&invitation);
+                let callback_url = env::var("CALLBACK_URL")
+                    .unwrap_or_else(|_| "http://localhost:3000/register.html".to_string());
+                send_invitation(&invitation, &callback_url);
                 Ok(HttpResponse::Ok().into())
             }
             Err(err) => Ok(err.error_response()),
-        }).responder()
+        })
+        .responder()
 }

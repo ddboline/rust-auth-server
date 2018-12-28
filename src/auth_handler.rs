@@ -1,9 +1,9 @@
 use actix::{Handler, Message};
+use actix_web::{middleware::identity::RequestIdentity, FromRequest, HttpRequest};
+use bcrypt::verify;
 use diesel::prelude::*;
 use errors::ServiceError;
-use models::{DbExecutor, User, SlimUser};
-use bcrypt::verify;
-use actix_web::{FromRequest, HttpRequest, middleware::identity::RequestIdentity};
+use models::{DbExecutor, SlimUser, User};
 use utils::decode_token;
 
 #[derive(Debug, Deserialize)]
@@ -16,24 +16,29 @@ impl Message for AuthData {
     type Result = Result<SlimUser, ServiceError>;
 }
 
-
 impl Handler<AuthData> for DbExecutor {
     type Result = Result<SlimUser, ServiceError>;
     fn handle(&mut self, msg: AuthData, _: &mut Self::Context) -> Self::Result {
-        use schema::users::dsl::{users, email};
+        use schema::users::dsl::{email, users};
         let conn: &PgConnection = &self.0.get().unwrap();
-        let mismatch_error = Err(ServiceError::BadRequest("Username and Password don't match".into()));
+        let mismatch_error = Err(ServiceError::BadRequest(
+            "Username and Password don't match".into(),
+        ));
 
-        let mut items = users
-            .filter(email.eq(&msg.email))
-            .load::<User>(conn)?;
+        let mut items = users.filter(email.eq(&msg.email)).load::<User>(conn)?;
 
         if let Some(user) = items.pop() {
             match verify(&msg.password, &user.password) {
                 Ok(matching) => {
-                    if matching { return Ok(user.into()); } else { return mismatch_error; }
+                    if matching {
+                        return Ok(user.into());
+                    } else {
+                        return mismatch_error;
+                    }
                 }
-                Err(_) => { return mismatch_error; }
+                Err(_) => {
+                    return mismatch_error;
+                }
             }
         }
         mismatch_error

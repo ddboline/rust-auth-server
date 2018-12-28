@@ -8,8 +8,8 @@ fn get_api_key() -> String {
 }
 
 #[allow(unused)]
-pub fn send_invitation(invitation: &Invitation) {
-    let tm = Transmission::new_eu(get_api_key());
+pub fn send_invitation(invitation: &Invitation, callback_url: &str) {
+    let tm = Transmission::new(get_api_key());
     let sending_email =
         std::env::var("SENDING_EMAIL_ADDRESS").expect("SENDING_EMAIL_ADDRESS must be set");
     // new email message with sender name and email
@@ -29,17 +29,18 @@ pub fn send_invitation(invitation: &Invitation) {
 
     let email_body = format!(
         "Please click on the link below to complete registration. <br/>
-         <a href=\"http://localhost:3000/register.html?id={}&email={}\">
-         http://localhost:3030/register</a> <br>
+         <a href=\"{}?id={}&email={}\">
+         {}</a> <br>
          your Invitation expires on <strong>{}</strong>",
+        callback_url,
         invitation.id,
         invitation.email,
         invitation
             .expires_at
             .format("%I:%M %p %A, %-d %B, %C%y")
-            .to_string()
+            .to_string(),
+        callback_url,
     );
-
 
     // complete the email message with details
     email

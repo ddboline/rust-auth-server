@@ -1,11 +1,12 @@
 use actix::prelude::*;
 use actix_web::middleware::identity::{CookieIdentityPolicy, IdentityService};
-use actix_web::{fs, http::Method, middleware::Logger, App};
+use actix_web::{http::Method, middleware::Logger, App};
 use auth_routes::{get_me, login, logout};
 use chrono::Duration;
 use invitation_routes::register_email;
 use models::DbExecutor;
 use register_routes::register_user;
+use static_files::{index_html, login_html, main_css, main_js, register_html};
 
 pub struct AppState {
     pub db: Addr<DbExecutor>,
@@ -44,11 +45,22 @@ pub fn create_app(db: Addr<DbExecutor>) -> App<AppState> {
                 r.method(Method::POST).with(register_user);
             })
         })
-        // serve static files
-        .handler(
-            "/",
-            fs::StaticFiles::new("./static/")
-                .unwrap()
-                .index_file("index.html"),
-        )
+        .scope("/auth", |static_| {
+            static_
+                .resource("/index.html", |r| {
+                    r.method(Method::GET).with(index_html);
+                })
+                .resource("/main.css", |r| {
+                    r.method(Method::GET).with(main_css);
+                })
+                .resource("/main.js", |r| {
+                    r.method(Method::GET).with(main_js);
+                })
+                .resource("/register.html", |r| {
+                    r.method(Method::GET).with(register_html);
+                })
+                .resource("/login.html", |r| {
+                    r.method(Method::GET).with(login_html);
+                })
+        })
 }

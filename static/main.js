@@ -12,8 +12,3 @@ function post(url = ``, data = {}) {
     body: JSON.stringify(data), // body data type must match "Content-Type" header
   }).then(response => response.json()); // parses response to JSON
 }
-
-// window.addEventListener('load', function() {
-//   console.log('All assets are loaded');
-//   console.log(getUrlVars());
-// });
