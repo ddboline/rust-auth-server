@@ -56,7 +56,7 @@ pub fn run_auth_server(port: u32) {
     }
 
     env_logger::init();
-    let database_url = env::var("PGURL").expect("PGURL must be set");
+    let database_url = env::var("AUTHDB").expect("PGURL must be set");
     let sys = actix::System::new("Actix_Tutorial");
 
     // create db connection pool
