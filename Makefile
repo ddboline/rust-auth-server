@@ -1,4 +1,4 @@
-version := "0.1.1"
+version := "0.1.2"
 release := "1"
 uniq := $(shell head -c1000 /dev/urandom | sha512sum | head -c 12 ; echo ;)
 cidfile := "/tmp/.tmp.docker.$(uniq)"
