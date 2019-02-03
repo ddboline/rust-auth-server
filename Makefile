@@ -7,7 +7,7 @@ build_type := release
 all:
 	mkdir -p build/ && \
 	cp Dockerfile.ubuntu18.04 build/Dockerfile && \
-	cp Cargo.toml src scripts Makefile static build/ && \
+	cp -a Cargo.toml src scripts Makefile static build/ && \
 	cd build && \
 	docker build -t rust-auth-server/build_rust:ubuntu18.04 . && \
 	cd ../ && \
