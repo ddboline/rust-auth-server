@@ -5,9 +5,13 @@ cidfile := "/tmp/.tmp.docker.$(uniq)"
 build_type := release
 
 all:
-	cp Dockerfile.ubuntu18.04 Dockerfile
-	docker build -t rust-auth-server/build_rust:ubuntu18.04 .
-	rm Dockerfile
+	mkdir -p build/ && \
+	cp Dockerfile.ubuntu18.04 build/Dockerfile && \
+	cp Cargo.toml src scripts Makefile static build/ && \
+	cd build && \
+	docker build -t rust-auth-server/build_rust:ubuntu18.04 . && \
+	cd ../ && \
+	rm -rf build/
 
 amazon:
 	cp Dockerfile.amazonlinux2018.03 Dockerfile

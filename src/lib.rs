@@ -65,7 +65,8 @@ pub fn run_auth_server(port: u32, number_of_connections: usize) {
         .build(manager)
         .expect("Failed to create pool.");
 
-    let address: Addr<DbExecutor> = SyncArbiter::start(number_of_connections, move || DbExecutor(pool.clone()));
+    let address: Addr<DbExecutor> =
+        SyncArbiter::start(number_of_connections, move || DbExecutor(pool.clone()));
 
     server::new(move || app::create_app(address.clone()))
         .bind(&format!("127.0.0.1:{}", port))
