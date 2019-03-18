@@ -1,4 +1,4 @@
-version := "0.1.2"
+version = $(shell awk '/^version/' Cargo.toml | head -n1 | cut -d "=" -f 2 | sed 's: ::g')
 release := "1"
 uniq := $(shell head -c1000 /dev/urandom | sha512sum | head -c 12 ; echo ;)
 cidfile := "/tmp/.tmp.docker.$(uniq)"
