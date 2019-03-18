@@ -1,7 +1,8 @@
-use models::Invitation;
 use sparkpost::transmission::{
     EmailAddress, Message, Options, Recipient, Transmission, TransmissionResponse,
 };
+
+use crate::models::Invitation;
 
 fn get_api_key() -> String {
     std::env::var("SPARKPOST_API_KEY").expect("SPARKPOST_API_KEY must be set")

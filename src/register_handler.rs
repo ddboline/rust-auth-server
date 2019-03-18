@@ -1,10 +1,12 @@
 use actix::{Handler, Message};
 use chrono::Local;
 use diesel::prelude::*;
-use errors::ServiceError;
-use models::{DbExecutor, Invitation, SlimUser, User};
-use utils::hash_password;
 use uuid::Uuid;
+
+use crate::errors::ServiceError;
+use crate::models::{DbExecutor, Invitation, SlimUser, User};
+use crate::schema;
+use crate::utils::hash_password;
 
 // UserData is used to extract data from a post request by the client
 #[derive(Debug, Deserialize)]

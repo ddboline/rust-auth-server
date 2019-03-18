@@ -1,6 +1,6 @@
-use app::AppState;
-
 use actix_web::{http::StatusCode, HttpRequest, HttpResponse};
+
+use crate::app::AppState;
 
 pub fn index_html(_: HttpRequest<AppState>) -> HttpResponse {
     HttpResponse::build(StatusCode::OK)

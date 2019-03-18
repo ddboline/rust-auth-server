@@ -2,9 +2,11 @@ use actix::{Handler, Message};
 use actix_web::{middleware::identity::RequestIdentity, FromRequest, HttpRequest};
 use bcrypt::verify;
 use diesel::prelude::*;
-use errors::ServiceError;
-use models::{DbExecutor, SlimUser, User};
-use utils::decode_token;
+
+use crate::errors::ServiceError;
+use crate::models::{DbExecutor, SlimUser, User};
+use crate::schema;
+use crate::utils::decode_token;
 
 #[derive(Debug, Deserialize)]
 pub struct AuthData {

@@ -1,8 +1,8 @@
 use actix_web::{AsyncResponder, FutureResponse, HttpResponse, Json, Path, ResponseError, State};
 use futures::future::Future;
 
-use app::AppState;
-use register_handler::{RegisterUser, UserData};
+use crate::app::AppState;
+use crate::register_handler::{RegisterUser, UserData};
 
 pub fn register_user(
     (invitation_id, user_data, state): (Path<String>, Json<UserData>, State<AppState>),

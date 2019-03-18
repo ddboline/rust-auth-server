@@ -1,9 +1,11 @@
 use actix::{Handler, Message};
 use chrono::{Duration, Local};
 use diesel::{self, prelude::*};
-use errors::ServiceError;
-use models::{DbExecutor, Invitation};
 use uuid::Uuid;
+
+use crate::errors::ServiceError;
+use crate::models::{DbExecutor, Invitation};
+use crate::schema;
 
 #[derive(Deserialize)]
 pub struct CreateInvitation {

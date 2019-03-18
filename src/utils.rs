@@ -1,10 +1,11 @@
 use bcrypt::{hash, DEFAULT_COST};
 use chrono::{Duration, Local};
-use errors::ServiceError;
 use jsonwebtoken::{decode, encode, Header, Validation};
-use models::SlimUser;
 use std::convert::From;
 use std::env;
+
+use crate::errors::ServiceError;
+use crate::models::SlimUser;
 
 pub fn hash_password(plain: &str) -> Result<String, ServiceError> {
     // get the hashing cost from the env variable or use default

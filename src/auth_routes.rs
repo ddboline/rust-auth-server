@@ -3,10 +3,10 @@
 use actix_web::middleware::identity::RequestIdentity;
 use actix_web::{AsyncResponder, FutureResponse, HttpRequest, HttpResponse, Json, ResponseError};
 use futures::future::Future;
-use utils::create_token;
 
-use app::AppState;
-use auth_handler::{AuthData, LoggedUser};
+use crate::app::AppState;
+use crate::auth_handler::{AuthData, LoggedUser};
+use crate::utils::create_token;
 
 pub fn login(
     (auth_data, req): (Json<AuthData>, HttpRequest<AppState>),
