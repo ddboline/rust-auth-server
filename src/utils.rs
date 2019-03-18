@@ -1,7 +1,7 @@
 use bcrypt::{hash, DEFAULT_COST};
 use chrono::{Duration, Local};
 use errors::ServiceError;
-use jwt::{decode, encode, Header, Validation};
+use jsonwebtoken::{decode, encode, Header, Validation};
 use models::SlimUser;
 use std::convert::From;
 use std::env;

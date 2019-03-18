@@ -45,7 +45,7 @@ use models::DbExecutor;
 pub fn run_auth_server(port: u32, number_of_connections: usize) {
     let home_dir = env::var("HOME").expect("No HOME directory...");
 
-    let env_file = format!("{}/.config/garmin_rust/config.env", home_dir);
+    let env_file = format!("{}/.config/rust_auth_server/config.env", home_dir);
 
     if Path::new(&env_file).exists() {
         dotenv::from_path(&env_file).ok();
