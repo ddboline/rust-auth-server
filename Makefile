@@ -33,7 +33,7 @@ install:
 	cp target/$(build_type)/rust_auth_server_bin /usr/bin/rust-auth-server
 
 pull:
-	`aws ecr get-login --no-include-email`
+	`aws ecr --region us-east-1 get-login --no-include-email`
 	docker pull 281914939654.dkr.ecr.us-east-1.amazonaws.com/rust_stable:latest
 	docker tag 281914939654.dkr.ecr.us-east-1.amazonaws.com/rust_stable:latest rust_stable:latest
 	docker rmi 281914939654.dkr.ecr.us-east-1.amazonaws.com/rust_stable:latest
