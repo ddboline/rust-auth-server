@@ -1,4 +1,4 @@
-use models::Invitation;
+use crate::models::Invitation;
 use sparkpost::transmission::{
     EmailAddress, Message, Options, Recipient, Transmission, TransmissionResponse,
 };
@@ -7,11 +7,10 @@ fn get_api_key() -> String {
     std::env::var("SPARKPOST_API_KEY").expect("SPARKPOST_API_KEY must be set")
 }
 
-#[allow(unused)]
 pub fn send_invitation(invitation: &Invitation) {
     let tm = Transmission::new_eu(get_api_key());
-    let sending_email =
-        std::env::var("SENDING_EMAIL_ADDRESS").expect("SENDING_EMAIL_ADDRESS must be set");
+    let sending_email = std::env::var("SENDING_EMAIL_ADDRESS")
+        .expect("SENDING_EMAIL_ADDRESS must be set");
     // new email message with sender name and email
     let mut email = Message::new(EmailAddress::new(sending_email, "Let's Organise"));
 
@@ -40,7 +39,6 @@ pub fn send_invitation(invitation: &Invitation) {
             .to_string()
     );
 
-
     // complete the email message with details
     email
         .add_recipient(recipient)
@@ -50,20 +48,16 @@ pub fn send_invitation(invitation: &Invitation) {
 
     let result = tm.send(&email);
 
+    // Note that we only print out the error response from email api
     match result {
-        Ok(res) => {
-            // println!("{:?}", &res);
-            match res {
-                TransmissionResponse::ApiResponse(api_res) => {
-                    println!("API Response: \n {:#?}", api_res);
-                    //   assert_eq!(1, api_res.total_accepted_recipients);
-                    //   assert_eq!(0, api_res.total_rejected_recipients);
-                }
-                TransmissionResponse::ApiError(errors) => {
-                    println!("Response Errors: \n {:#?}", &errors);
-                }
+        Ok(res) => match res {
+            TransmissionResponse::ApiResponse(api_res) => {
+                println!("API Response: \n {:#?}", api_res);
             }
-        }
+            TransmissionResponse::ApiError(errors) => {
+                println!("Response Errors: \n {:#?}", &errors);
+            }
+        },
         Err(error) => {
             println!("error \n {:#?}", error);
         }
