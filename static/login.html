@@ -23,7 +23,6 @@
   function login() {
     let email = document.querySelector('#email');
     let password = document.querySelector('#password');
-
     var data = JSON.stringify({"email": email.value, "password": password.value});
     var xmlhttp = new XMLHttpRequest();
     xmlhttp.onload = function() {
