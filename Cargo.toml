@@ -1,6 +1,6 @@
 [package]
 name = "simple-auth-server"
-version = "0.1.0"
+version = "0.1.1"
 license="MPL-2.0+/LGPL-3.0+"
 authors = ["mygnu <tech@hgill.io>"]
 edition = "2018"
@@ -29,3 +29,12 @@ uuid = { version = "0.7", features = ["serde", "v4"] }
 [profile.release]
 lto= true
 opt-level= 3
+
+[lib]
+name = "rust_auth_server"
+path = "src/lib.rs"
+
+[[bin]]
+name = "rust_auth_server_bin"
+path = "src/main.rs"
+doc = false

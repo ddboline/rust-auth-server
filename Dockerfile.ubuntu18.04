@@ -1,0 +1,10 @@
+FROM rust_stable:latest
+MAINTAINER Daniel Boline
+
+WORKDIR /rust-auth-server
+
+ADD Cargo.toml /rust-auth-server
+ADD src /rust-auth-server/src
+ADD scripts /rust-auth-server/scripts
+ADD Makefile /rust-auth-server
+ADD static /rust-auth-server/static
