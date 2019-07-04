@@ -2,7 +2,9 @@ use actix::{Handler, Message};
 use chrono::{Duration, Local};
 use diesel::{self, prelude::*};
 use uuid::Uuid;
+use std::env::var;
 
+use crate::email_service::send_invitation;
 use crate::errors::ServiceError;
 use crate::models::{DbExecutor, Invitation};
 
@@ -32,6 +34,10 @@ impl Handler<CreateInvitation> for DbExecutor {
         let inserted_invitation = diesel::insert_into(invitations)
             .values(&new_invitation)
             .get_result(conn)?;
+
+        let callback_url = var("CALLBACK_URL")
+            .unwrap_or_else(|_| "http://localhost:3000/register.html".to_string());
+        send_invitation(&new_invitation, &callback_url);
 
         Ok(inserted_invitation)
     }
