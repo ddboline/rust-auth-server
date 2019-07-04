@@ -10,7 +10,7 @@ fn get_api_key() -> String {
 }
 
 pub fn send_invitation(invitation: &Invitation, callback_url: &str) {
-    let tm = Transmission::new_eu(get_api_key());
+    let tm = Transmission::new(get_api_key());
     let sending_email =
         env::var("SENDING_EMAIL_ADDRESS").expect("SENDING_EMAIL_ADDRESS must be set");
     // new email message with sender name and email
