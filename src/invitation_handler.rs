@@ -1,8 +1,8 @@
 use actix::{Handler, Message};
 use chrono::{Duration, Local};
 use diesel::{self, prelude::*};
-use uuid::Uuid;
 use std::env::var;
+use uuid::Uuid;
 
 use crate::email_service::send_invitation;
 use crate::errors::ServiceError;
