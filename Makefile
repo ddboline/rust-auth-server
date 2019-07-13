@@ -13,10 +13,14 @@ all:
 	cd ../ && \
 	rm -rf build/
 
-amazon:
-	cp Dockerfile.amazonlinux2018.03 Dockerfile
-	docker build -t rust-auth-server/build_rust:amazonlinux2018.03 .
-	rm Dockerfile
+xenial:
+	mkdir -p build/ && \
+	cp Dockerfile.ubuntu16.04 build/Dockerfile && \
+	cp -a Cargo.toml src scripts Makefile static build/ && \
+	cd build && \
+	docker build -t rust-auth-server/build_rust:ubuntu16.04 . && \
+	cd ../ && \
+	rm -rf build/
 
 cleanup:
 	docker rmi `docker images | python -c "import sys; print('\n'.join(l.split()[2] for l in sys.stdin if '<none>' in l))"`
@@ -29,6 +33,12 @@ package:
 	docker rm `cat $(cidfile)`
 	rm $(cidfile)
 
+package_xenial:
+	docker run --cidfile $(cidfile) -v `pwd`/target:/rust-auth-server/target rust-auth-server/build_rust:ubuntu16.04 /rust-auth-server/scripts/build_deb_docker.sh $(version) $(release)
+	docker cp `cat $(cidfile)`:/rust-auth-server/rust-auth_$(version)-$(release)_amd64.deb .
+	docker rm `cat $(cidfile)`
+	rm $(cidfile)
+
 install:
 	cp target/$(build_type)/rust_auth_server_bin /usr/bin/rust-auth-server
 
@@ -37,3 +47,9 @@ pull:
 	docker pull 281914939654.dkr.ecr.us-east-1.amazonaws.com/rust_stable:latest
 	docker tag 281914939654.dkr.ecr.us-east-1.amazonaws.com/rust_stable:latest rust_stable:latest
 	docker rmi 281914939654.dkr.ecr.us-east-1.amazonaws.com/rust_stable:latest
+
+pull_xenial:
+	`aws ecr --region us-east-1 get-login --no-include-email`
+	docker pull 281914939654.dkr.ecr.us-east-1.amazonaws.com/rust_stable:xenial_latest
+	docker tag 281914939654.dkr.ecr.us-east-1.amazonaws.com/rust_stable:xenial_latest rust_stable:xenial_latest
+	docker rmi 281914939654.dkr.ecr.us-east-1.amazonaws.com/rust_stable:xenial_latest
