@@ -49,7 +49,7 @@ pull:
 	docker rmi 281914939654.dkr.ecr.us-east-1.amazonaws.com/rust_stable:latest
 
 pull_xenial:
-	`aws ecr --region us-east-1 get-login --no-include-email`
+	`aws ecr --region us-east-1 get-login`
 	docker pull 281914939654.dkr.ecr.us-east-1.amazonaws.com/rust_stable:xenial_latest
 	docker tag 281914939654.dkr.ecr.us-east-1.amazonaws.com/rust_stable:xenial_latest rust_stable:xenial_latest
 	docker rmi 281914939654.dkr.ecr.us-east-1.amazonaws.com/rust_stable:xenial_latest
