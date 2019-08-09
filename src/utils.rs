@@ -2,6 +2,7 @@ use bcrypt::{hash, DEFAULT_COST};
 use chrono::{Duration, Local};
 use jsonwebtoken::{decode, encode, Header, Validation};
 use std::env;
+use log::debug;
 
 use crate::errors::ServiceError;
 use crate::models::SlimUser;
@@ -12,7 +13,7 @@ pub fn hash_password(plain: &str) -> Result<String, ServiceError> {
         Ok(cost) => cost.parse().unwrap_or(DEFAULT_COST),
         _ => DEFAULT_COST,
     };
-    println!("{}", &hashing_cost);
+    debug!("{}", &hashing_cost);
     hash(plain, hashing_cost).map_err(|_| ServiceError::InternalServerError)
 }
 

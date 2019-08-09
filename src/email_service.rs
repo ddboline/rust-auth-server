@@ -2,6 +2,7 @@ use sparkpost::transmission::{
     EmailAddress, Message, Options, Recipient, Transmission, TransmissionResponse,
 };
 use std::env;
+use log::debug;
 
 use crate::models::Invitation;
 
@@ -56,14 +57,14 @@ pub fn send_invitation(invitation: &Invitation, callback_url: &str) {
     match result {
         Ok(res) => match res {
             TransmissionResponse::ApiResponse(api_res) => {
-                println!("API Response: \n {:#?}", api_res);
+                debug!("API Response: \n {:#?}", api_res);
             }
             TransmissionResponse::ApiError(errors) => {
-                println!("Response Errors: \n {:#?}", &errors);
+                debug!("Response Errors: \n {:#?}", &errors);
             }
         },
         Err(error) => {
-            println!("error \n {:#?}", error);
+            debug!("error \n {:#?}", error);
         }
     }
 }
