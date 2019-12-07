@@ -6,7 +6,6 @@ extern crate diesel;
 extern crate serde_derive;
 
 use actix::prelude::*;
-use actix_files as fs;
 use actix_identity::{CookieIdentityPolicy, IdentityService};
 use actix_web::middleware::Logger;
 use actix_web::{web, App, HttpServer};
@@ -24,8 +23,10 @@ mod models;
 mod register_handler;
 mod register_routes;
 mod schema;
+mod ses_client;
 mod static_files;
 mod utils;
+
 use std::env;
 use std::path::Path;
 
