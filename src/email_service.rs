@@ -5,7 +5,7 @@ use crate::models::Invitation;
 use crate::ses_client::SesInstance;
 
 pub fn send_invitation(invitation: &Invitation, callback_url: &str) {
-    let ses = SesInstance::new();
+    let ses = SesInstance::new(None);
 
     let sending_email =
         env::var("SENDING_EMAIL_ADDRESS").expect("SENDING_EMAIL_ADDRESS must be set");

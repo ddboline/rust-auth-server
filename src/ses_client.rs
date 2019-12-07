@@ -24,22 +24,17 @@ impl fmt::Debug for SesInstance {
 
 impl Default for SesInstance {
     fn default() -> Self {
-        Self {
-            ses_client: SesClient::new(Region::UsEast1),
-            region: Region::UsEast1,
-        }
+        Self::new(None)
     }
 }
 
 impl SesInstance {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn set_region(&mut self, region: &str) -> Result<(), Error> {
-        self.region = region.parse()?;
-        self.ses_client = SesClient::new(self.region.clone());
-        Ok(())
+    pub fn new(region: Option<Region>) -> Self {
+        let region = region.unwrap_or(Region::UsEast1);
+        Self {
+            ses_client: SesClient::new(region.clone()),
+            region,
+        }
     }
 
     pub fn send_email(&self, src: &str, dest: &str, sub: &str, msg: &str) -> Result<(), Error> {
@@ -62,7 +57,6 @@ impl SesInstance {
                         }),
                         ..Default::default()
                     },
-                    ..Default::default()
                 },
                 ..Default::default()
             })
