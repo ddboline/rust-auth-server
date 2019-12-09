@@ -30,9 +30,10 @@ impl Handler<ChangePassword> for DbExecutor {
         use crate::schema::invitations::dsl::{id, invitations};
         use crate::schema::users::dsl::{email, password, users};
         let conn: &PgConnection = &self.0.get().unwrap();
+        let password_: String = hash_password(&msg.password)?;
 
         diesel::update(users.filter(email.eq(msg.email)))
-            .set(password.eq(msg.password))
+            .set(password.eq(password_))
             .execute(conn)
             .map_err(|_db_error| ServiceError::BadRequest("Update failed".into()))
             .map(|changed| changed > 0)
