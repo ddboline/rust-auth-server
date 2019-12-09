@@ -21,11 +21,11 @@ pub struct ChangePassword {
 }
 
 impl Message for ChangePassword {
-    type Result = Result<(), ServiceError>;
+    type Result = Result<bool, ServiceError>;
 }
 
 impl Handler<ChangePassword> for DbExecutor {
-    type Result = Result<(), ServiceError>;
+    type Result = Result<bool, ServiceError>;
     fn handle(&mut self, msg: ChangePassword, _: &mut Self::Context) -> Self::Result {
         use crate::schema::invitations::dsl::{id, invitations};
         use crate::schema::users::dsl::{email, password, users};
@@ -35,6 +35,6 @@ impl Handler<ChangePassword> for DbExecutor {
             .set(password.eq(msg.password))
             .execute(conn)
             .map_err(|_db_error| ServiceError::BadRequest("Update failed".into()))
-            .map(|_| ())
+            .map(|changed| changed > 0)
     }
 }

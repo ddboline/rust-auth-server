@@ -20,7 +20,10 @@ pub fn change_password_user(
     db.send(msg)
         .from_err()
         .and_then(|db_response| match db_response {
-            Ok(slim_user) => Ok(HttpResponse::Ok().json(slim_user)),
+            Ok(success) => {
+                let body = if success { "success" } else { "failure" };
+                Ok(HttpResponse::Ok().body(body))
+            }
             Err(service_error) => Ok(service_error.error_response()),
         })
 }
