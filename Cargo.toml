@@ -1,14 +1,14 @@
 [package]
 name = "rust_auth_server"
-version = "0.1.8"
+version = "0.1.9"
 license="MPL-2.0+/LGPL-3.0+"
 authors = ["mygnu <tech@hgill.io>"]
 edition = "2018"
 
 [dependencies]
 actix = "0.8.3"
-actix-rt = "0.2.3"
-actix-web = "1.0.3"
+actix-rt = "0.2.6"
+actix-web = "1.0.9"
 actix-identity = "0.1"
 
 bcrypt = "0.4"
