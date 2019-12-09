@@ -14,7 +14,9 @@ use crate::change_password_routes;
 use crate::invitation_routes;
 use crate::models::DbExecutor;
 use crate::register_routes;
-use crate::static_files::{index_html, login_html, main_css, main_js, register_html};
+use crate::static_files::{
+    change_password, index_html, login_html, main_css, main_js, register_html,
+};
 
 pub fn run_auth_server(port: u32, number_of_connections: usize) -> std::io::Result<()> {
     let home_dir = env::var("HOME").expect("No HOME directory...");
@@ -96,7 +98,11 @@ pub fn run_auth_server(port: u32, number_of_connections: usize) -> std::io::Resu
                     .service(web::resource("/main.css").route(web::get().to(main_css)))
                     .service(web::resource("/main.js").route(web::get().to(main_js)))
                     .service(web::resource("/register.html").route(web::get().to(register_html)))
-                    .service(web::resource("/login.html").route(web::get().to(login_html))),
+                    .service(web::resource("/login.html").route(web::get().to(login_html)))
+                    .service(
+                        web::resource("/change_password.html")
+                            .route(web::get().to(change_password)),
+                    ),
             )
     })
     .bind(&format!("127.0.0.1:{}", port))?
