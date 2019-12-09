@@ -10,6 +10,7 @@ use diesel::{r2d2::ConnectionManager, PgConnection};
 use dotenv::dotenv;
 
 use crate::auth_routes;
+use crate::change_password_routes;
 use crate::invitation_routes;
 use crate::models::DbExecutor;
 use crate::register_routes;
@@ -81,6 +82,11 @@ pub fn run_auth_server(port: u32, number_of_connections: usize) -> std::io::Resu
                     .service(
                         web::resource("/register/{invitation_id}")
                             .route(web::post().to_async(register_routes::register_user)),
+                    )
+                    .service(
+                        web::resource("/password_change").route(
+                            web::post().to_async(change_password_routes::change_password_user),
+                        ),
                     ),
             )
             // serve static files

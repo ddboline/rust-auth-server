@@ -7,6 +7,8 @@ extern crate serde_derive;
 
 mod auth_handler;
 mod auth_routes;
+mod change_password_handler;
+mod change_password_routes;
 mod email_service;
 mod errors;
 mod invitation_handler;

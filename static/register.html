@@ -15,6 +15,7 @@
       <p>Please enter your email and new password</p>
       <input class="field" type="text" placeholder="email" id="email" />
       <input class="field" type="password" placeholder="Password" id="password" />
+      <input class="field" type="password" placeholder="Repeat Password" id="password_repeat" />
       <input class="btn" type="submit" value="Register" onclick="register()" />
     </div>
   </body>
@@ -29,12 +30,17 @@
   }
   function register() {
     let password = document.querySelector('#password');
-    let invitation_id = getUrlVars().id;
+    let password_repeat = document.querySelector('#password_repeat');
+    if (password.value == password_repeat.value) {
+      let invitation_id = getUrlVars().id;
 
-    post('../api/register/' + invitation_id, { password: password.value }).then(data => {
-      password.value = '';
-      console.error(data);
-    });
+      post('../api/register/' + invitation_id, { password: password.value }).then(data => {
+        password.value = '';
+        console.error(data);
+      });
+    } else {
+      console.err('Passwords do not match!');
+    }
   }
   window.addEventListener('load', function() {
     let email = document.querySelector('#email');
