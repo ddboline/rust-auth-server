@@ -23,9 +23,8 @@
     let email = document.querySelector('#email');
 
     post('../api/invitation', { email: email.value }).then(data => {
-      alert('Please check your email.');
+      document.getElementsByClassName("login").innerHTML = "Please check your email: " + data;
       email.value = '';
-      console.error(data);
     });
   }
 </script>

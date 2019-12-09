@@ -27,7 +27,7 @@
     var data = JSON.stringify({"email": email.value, "password": password.value});
     var xmlhttp = new XMLHttpRequest();
     xmlhttp.onload = function() {
-       location.reload();
+       location.replace("../api/auth");
     }
     xmlhttp.open( "POST", '../api/auth' , true );
     xmlhttp.setRequestHeader("Content-Type", "application/json");
@@ -36,10 +36,14 @@
   function sendVerificationEmail() {
     let email = document.querySelector('#email');
 
-    post('../api/invitation', { email: email.value }).then(data => {
-      alert('Please check your email.');
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.onload = function() {
       email.value = '';
-      console.error(data);
-    });
+      document.getElementsByClassName("login").innerHTML = "Please check your email.";
+    }
+    var data = JSON.stringify({"email": email.value});
+    xmlhttp.open( "POST", "../api/auth", true );
+    xmlhttp.setRequestHeader("Content-Type", "application/json");
+    xmlhttp.send(data);
   }
 </script>
