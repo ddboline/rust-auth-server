@@ -13,7 +13,7 @@ pub fn register_email(
     db.send(signup_invitation.into_inner())
         .from_err()
         .and_then(|db_response| match db_response {
-            Ok(_) => Ok(HttpResponse::Ok().into()),
+            Ok(x) => Ok(HttpResponse::Ok().json(x)),
             Err(err) => Ok(err.error_response()),
         })
 }

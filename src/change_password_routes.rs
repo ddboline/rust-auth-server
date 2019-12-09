@@ -1,6 +1,7 @@
 use actix::Addr;
 use actix_web::{web, Error, HttpResponse, ResponseError};
 use futures::Future;
+use maplit::hashmap;
 
 use crate::auth_handler::LoggedUser;
 use crate::change_password_handler::{ChangePassword, UserData};
@@ -21,8 +22,9 @@ pub fn change_password_user(
         .from_err()
         .and_then(|db_response| match db_response {
             Ok(success) => {
-                let body = if success { "success" } else { "failure" };
-                Ok(HttpResponse::Ok().body(body))
+                let status = if success { "success" } else { "failure" };
+                let result = hashmap! { "status" => status };
+                Ok(HttpResponse::Ok().json(result))
             }
             Err(service_error) => Ok(service_error.error_response()),
         })
