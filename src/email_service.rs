@@ -1,10 +1,12 @@
+use failure::{format_err, Error};
 use log::debug;
 use std::env;
 
+use crate::errors::ServiceError;
 use crate::models::Invitation;
 use crate::ses_client::SesInstance;
 
-pub fn send_invitation(invitation: &Invitation, callback_url: &str) {
+pub fn send_invitation(invitation: &Invitation, callback_url: &str) -> Result<(), ServiceError> {
     let ses = SesInstance::new(None);
 
     let sending_email =
@@ -25,13 +27,12 @@ pub fn send_invitation(invitation: &Invitation, callback_url: &str) {
         callback_url,
     );
 
-    match ses.send_email(
+    ses.send_email(
         &sending_email,
         &invitation.email,
         "You have been invited to join Simple-Auth-Server Rust",
         &email_body,
-    ) {
-        Ok(_) => debug!("Success"),
-        Err(e) => debug!("Failure {}", e),
-    }
+    )
+    .map(|_| debug!("Success"))
+    .map_err(|e| ServiceError::BadRequest(format!("Bad request {:?}", e)))
 }

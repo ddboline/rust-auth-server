@@ -37,7 +37,7 @@ impl Handler<CreateInvitation> for DbExecutor {
 
         let callback_url = var("CALLBACK_URL")
             .unwrap_or_else(|_| "http://localhost:3000/register.html".to_string());
-        send_invitation(&new_invitation, &callback_url);
+        send_invitation(&new_invitation, &callback_url)?;
 
         Ok(inserted_invitation)
     }
