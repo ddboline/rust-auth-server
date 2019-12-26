@@ -1,8 +1,8 @@
 use bcrypt::{hash, DEFAULT_COST};
 use chrono::{Duration, Local};
 use jsonwebtoken::{decode, encode, Header, Validation};
-use std::env;
 use log::debug;
+use std::env;
 
 use crate::errors::ServiceError;
 use crate::models::SlimUser;

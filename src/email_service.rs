@@ -1,8 +1,8 @@
+use log::debug;
 use sparkpost::transmission::{
     EmailAddress, Message, Options, Recipient, Transmission, TransmissionResponse,
 };
 use std::env;
-use log::debug;
 
 use crate::models::Invitation;
 

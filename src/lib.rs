@@ -85,19 +85,19 @@ pub fn run_auth_server(port: u32, number_of_connections: usize) -> std::io::Resu
                     // routes for authentication
                     .service(
                         web::resource("/auth")
-                            .route(web::post().to_async(auth_routes::login))
+                            .route(web::post().to(auth_routes::login))
                             .route(web::delete().to(auth_routes::logout))
-                            .route(web::get().to_async(auth_routes::get_me)),
+                            .route(web::get().to(auth_routes::get_me)),
                     )
                     // routes to invitation
                     .service(
                         web::resource("/invitation")
-                            .route(web::post().to_async(invitation_routes::register_email)),
+                            .route(web::post().to(invitation_routes::register_email)),
                     )
                     // routes to register as a user after the
                     .service(
                         web::resource("/register/{invitation_id}")
-                            .route(web::post().to_async(register_routes::register_user)),
+                            .route(web::post().to(register_routes::register_user)),
                     ),
             )
             // serve static files
@@ -111,7 +111,7 @@ pub fn run_auth_server(port: u32, number_of_connections: usize) -> std::io::Resu
             )
     })
     .bind(&format!("127.0.0.1:{}", port))?
-    .start();
+    .run();
 
     sys.run()
 }
