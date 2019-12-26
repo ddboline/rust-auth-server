@@ -18,7 +18,7 @@ pub async fn login(
         Ok(user) => {
             let token = create_token(&user)?;
             id.remember(token);
-            Ok(HttpResponse::Ok().into())
+            Ok(HttpResponse::Ok().json(user))
         }
         Err(err) => Ok(err.error_response()),
     }

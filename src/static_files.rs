@@ -30,3 +30,9 @@ pub fn login_html() -> HttpResponse {
         .content_type("text/html; charset=utf-8")
         .body(include_str!("../static/login.html"))
 }
+
+pub fn change_password() -> HttpResponse {
+    HttpResponse::Ok()
+        .content_type("text/html; charset=utf-8")
+        .body(include_str!("../static/change_password.html"))
+}

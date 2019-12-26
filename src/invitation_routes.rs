@@ -12,7 +12,7 @@ pub async fn register_email(
 ) -> Result<HttpResponse, Error> {
     let db_response = db.send(signup_invitation.into_inner()).await?;
     match db_response {
-        Ok(_) => Ok(HttpResponse::Ok().into()),
+        Ok(x) => Ok(HttpResponse::Ok().json(x)),
         Err(err) => Ok(err.error_response()),
     }
 }
