@@ -1,18 +1,19 @@
 use actix::Addr;
 use actix_identity::Identity;
+use actix_web::web::{block, Data, Json};
 use actix_web::{web, Error, HttpRequest, HttpResponse, Responder, ResponseError};
 use futures::Future;
 
 use crate::auth_handler::{AuthData, LoggedUser};
-use crate::models::DbExecutor;
+use crate::models::{DbExecutor, HandleRequest};
 use crate::utils::create_token;
 
 pub async fn login(
-    auth_data: web::Json<AuthData>,
+    auth_data: Json<AuthData>,
     id: Identity,
-    db: web::Data<Addr<DbExecutor>>,
+    db: Data<DbExecutor>,
 ) -> Result<HttpResponse, Error> {
-    let res = db.send(auth_data.into_inner()).await?;
+    let res = block(move || db.handle(auth_data.into_inner())).await;
 
     match res {
         Ok(user) => {

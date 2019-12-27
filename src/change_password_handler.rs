@@ -1,10 +1,9 @@
-use actix::{Handler, Message};
 use chrono::Local;
 use diesel::prelude::*;
 use uuid::Uuid;
 
 use crate::errors::ServiceError;
-use crate::models::{DbExecutor, Invitation, SlimUser, User};
+use crate::models::{DbExecutor, HandleRequest, Invitation, SlimUser, User};
 use crate::utils::hash_password;
 
 // UserData is used to extract data from a post request by the client
@@ -20,13 +19,9 @@ pub struct ChangePassword {
     pub password: String,
 }
 
-impl Message for ChangePassword {
+impl HandleRequest<ChangePassword> for DbExecutor {
     type Result = Result<bool, ServiceError>;
-}
-
-impl Handler<ChangePassword> for DbExecutor {
-    type Result = Result<bool, ServiceError>;
-    fn handle(&mut self, msg: ChangePassword, _: &mut Self::Context) -> Self::Result {
+    fn handle(&self, msg: ChangePassword) -> Self::Result {
         use crate::schema::invitations::dsl::{id, invitations};
         use crate::schema::users::dsl::{email, password, users};
         let conn: &PgConnection = &self.0.get().unwrap();

@@ -1,16 +1,17 @@
 use actix::Addr;
+use actix_web::web::{block, Data, Json};
 use actix_web::{web, Error, HttpResponse, ResponseError};
 use futures::Future;
 use maplit::hashmap;
 
 use crate::auth_handler::LoggedUser;
 use crate::change_password_handler::{ChangePassword, UserData};
-use crate::models::DbExecutor;
+use crate::models::{DbExecutor, HandleRequest};
 
 pub async fn change_password_user(
     logged_user: LoggedUser,
-    user_data: web::Json<UserData>,
-    db: web::Data<Addr<DbExecutor>>,
+    user_data: Json<UserData>,
+    db: Data<DbExecutor>,
 ) -> Result<HttpResponse, Error> {
     let msg = ChangePassword {
         // into_inner() returns the inner string value from Path
@@ -18,7 +19,7 @@ pub async fn change_password_user(
         password: user_data.password.clone(),
     };
 
-    let db_response = db.send(msg).await?;
+    let db_response = block(move || db.handle(msg)).await;
 
     match db_response {
         Ok(success) => {

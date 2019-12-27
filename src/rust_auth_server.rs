@@ -18,7 +18,7 @@ use crate::static_files::{
     change_password, index_html, login_html, main_css, main_js, register_html,
 };
 
-pub fn run_auth_server(port: u32, number_of_connections: usize) -> std::io::Result<()> {
+pub fn run_auth_server(port: u32) -> std::io::Result<()> {
     let home_dir = env::var("HOME").expect("No HOME directory...");
 
     let env_file = format!("{}/.config/rust_auth_server/config.env", home_dir);
@@ -46,16 +46,13 @@ pub fn run_auth_server(port: u32, number_of_connections: usize) -> std::io::Resu
         .build(manager)
         .expect("Failed to create pool.");
 
-    let address: Addr<DbExecutor> =
-        SyncArbiter::start(number_of_connections, move || DbExecutor(pool.clone()));
-
     HttpServer::new(move || {
         // secret is a random minimum 32 bytes long base 64 string
         let secret: String = std::env::var("SECRET_KEY").unwrap_or_else(|_| "0123".repeat(8));
         let domain: String = std::env::var("DOMAIN").unwrap_or_else(|_| "localhost".to_string());
 
         App::new()
-            .data(address.clone())
+            .data(DbExecutor(pool.clone()))
             .wrap(Logger::default())
             .wrap(IdentityService::new(
                 CookieIdentityPolicy::new(secret.as_bytes())

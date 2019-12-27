@@ -1,14 +1,15 @@
 use actix::Addr;
+use actix_web::web::{block, Data, Json, Path};
 use actix_web::{web, Error, HttpResponse, ResponseError};
 use futures::Future;
 
-use crate::models::DbExecutor;
+use crate::models::{DbExecutor, HandleRequest};
 use crate::register_handler::{RegisterUser, UserData};
 
 pub async fn register_user(
-    invitation_id: web::Path<String>,
-    user_data: web::Json<UserData>,
-    db: web::Data<Addr<DbExecutor>>,
+    invitation_id: Path<String>,
+    user_data: Json<UserData>,
+    db: Data<DbExecutor>,
 ) -> Result<HttpResponse, Error> {
     let msg = RegisterUser {
         // into_inner() returns the inner string value from Path
@@ -16,7 +17,7 @@ pub async fn register_user(
         password: user_data.password.clone(),
     };
 
-    let db_response = db.send(msg).await?;
+    let db_response = block(move || db.handle(msg)).await;
     match db_response {
         Ok(slim_user) => Ok(HttpResponse::Ok().json(slim_user)),
         Err(service_error) => Ok(service_error.error_response()),

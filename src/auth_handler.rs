@@ -1,4 +1,3 @@
-use actix::{Handler, Message};
 use actix_identity::Identity;
 use actix_web::FromRequest;
 use actix_web::{dev::Payload, Error, HttpRequest};
@@ -11,7 +10,7 @@ use std::pin::Pin;
 use std::task::Poll;
 
 use crate::errors::ServiceError;
-use crate::models::{DbExecutor, SlimUser, User};
+use crate::models::{DbExecutor, HandleRequest, SlimUser, User};
 use crate::utils::decode_token;
 
 #[derive(Debug, Deserialize)]
@@ -20,13 +19,9 @@ pub struct AuthData {
     pub password: String,
 }
 
-impl Message for AuthData {
+impl HandleRequest<AuthData> for DbExecutor {
     type Result = Result<SlimUser, ServiceError>;
-}
-
-impl Handler<AuthData> for DbExecutor {
-    type Result = Result<SlimUser, ServiceError>;
-    fn handle(&mut self, msg: AuthData, _: &mut Self::Context) -> Self::Result {
+    fn handle(&self, msg: AuthData) -> Self::Result {
         use crate::schema::users::dsl::{email, users};
         let conn: &PgConnection = &self.0.get().unwrap();
 
