@@ -10,7 +10,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Install deps
-      run: sudo apt-get update && sudo apt-get install libpq-dev
+      run: sudo apt-get update && sudo apt-get install libpq-dev && rustup update
     - name: Clippy
       run: cargo clippy
     - name: Build
