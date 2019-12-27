@@ -18,7 +18,7 @@ use crate::static_files::{
     change_password, index_html, login_html, main_css, main_js, register_html,
 };
 
-pub fn run_auth_server(port: u32) -> std::io::Result<()> {
+pub async fn run_auth_server(port: u32) -> std::io::Result<()> {
     let home_dir = env::var("HOME").expect("No HOME directory...");
 
     let env_file = format!("{}/.config/rust_auth_server/config.env", home_dir);
@@ -36,7 +36,6 @@ pub fn run_auth_server(port: u32) -> std::io::Result<()> {
         "simple-auth-server=debug,actix_web=info,actix_server=info",
     );
     env_logger::init();
-    let sys = actix_rt::System::new("example");
 
     let database_url = std::env::var("AUTHDB").expect("DATABASE_URL must be set");
 
@@ -102,7 +101,6 @@ pub fn run_auth_server(port: u32) -> std::io::Result<()> {
             )
     })
     .bind(&format!("127.0.0.1:{}", port))?
-    .run();
-
-    sys.run()
+    .run()
+    .await
 }
