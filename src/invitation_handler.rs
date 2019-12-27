@@ -27,7 +27,7 @@ impl Handler<CreateInvitation> for DbExecutor {
         // creating a new Invitation object with expired at time that is 24 hours from now
         let new_invitation = Invitation {
             id: Uuid::new_v4(),
-            email: msg.email.clone(),
+            email: msg.email,
             expires_at: Local::now().naive_local() + Duration::hours(24),
         };
 
