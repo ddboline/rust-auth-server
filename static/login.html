@@ -16,7 +16,8 @@
       <input class="field" type="text" placeholder="email" id="email" />
       <input class="field" type="password" placeholder="Password" id="password" />
       <input class="btn" type="submit" value="Login" onclick="login()" />
-      <input class="btn" type="submit" value="Request Password Reset" onclick="sendVerificationEmail()" />
+      <input class="btn" type="submit" value="Change Password" onclick="sendVerificationEmail()" />
+      <input class="btn" type="submit" value="Register via Email" onclick="registerViaEmail()" />
     </div>
   </body>
 </html>
@@ -42,7 +43,20 @@
       document.getElementsByClassName("login").innerHTML = "Please check your email.";
     }
     var data = JSON.stringify({"email": email.value});
-    xmlhttp.open( "POST", "../api/auth", true );
+    xmlhttp.open( "POST", "../api/password_change", true );
+    xmlhttp.setRequestHeader("Content-Type", "application/json");
+    xmlhttp.send(data);
+  }
+  function registerViaEmail() {
+    let email = document.querySelector('#email');
+
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.onload = function() {
+      email.value = '';
+      document.getElementsByClassName("login").innerHTML = "Please check your email.";
+    }
+    var data = JSON.stringify({"email": email.value});
+    xmlhttp.open( "POST", "../api/invitation", true );
     xmlhttp.setRequestHeader("Content-Type", "application/json");
     xmlhttp.send(data);
   }
