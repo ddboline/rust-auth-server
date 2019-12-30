@@ -1,5 +1,5 @@
 use chrono::Local;
-use diesel::prelude::*;
+use diesel::{PgConnection, RunQueryDsl, ExpressionMethods, QueryDsl};
 use uuid::Uuid;
 
 use crate::errors::ServiceError;

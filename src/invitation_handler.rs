@@ -1,5 +1,5 @@
 use chrono::{Duration, Local};
-use diesel::{self, prelude::*};
+use diesel::{self, PgConnection, RunQueryDsl};
 use std::env::var;
 use uuid::Uuid;
 

@@ -2,7 +2,7 @@ use actix_identity::Identity;
 use actix_web::FromRequest;
 use actix_web::{dev::Payload, Error, HttpRequest};
 use bcrypt::verify;
-use diesel::prelude::*;
+use diesel::{PgConnection, QueryDsl, RunQueryDsl, ExpressionMethods};
 use futures::executor::block_on;
 use futures::future::{ready, Ready};
 use std::future::Future;

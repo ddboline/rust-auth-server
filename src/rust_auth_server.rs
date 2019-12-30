@@ -1,6 +1,5 @@
 use std::env;
 use std::path::Path;
-// use actix::prelude::*;
 use actix::{Addr, SyncArbiter};
 use actix_identity::{CookieIdentityPolicy, IdentityService};
 use actix_web::middleware::Logger;
