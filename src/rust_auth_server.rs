@@ -1,5 +1,3 @@
-use std::env;
-use std::path::Path;
 use actix::{Addr, SyncArbiter};
 use actix_identity::{CookieIdentityPolicy, IdentityService};
 use actix_web::middleware::Logger;
@@ -7,6 +5,8 @@ use actix_web::{web, App, HttpServer};
 use chrono::Duration;
 use diesel::{r2d2::ConnectionManager, PgConnection};
 use dotenv::dotenv;
+use std::env;
+use std::path::Path;
 
 use crate::auth_routes;
 use crate::change_password_routes;

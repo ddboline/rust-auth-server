@@ -36,7 +36,7 @@
 
       post('../api/register/' + invitation_id, { password: password.value }).then(data => {
         password.value = '';
-        console.error(data);
+        document.getElementsByClassName("login").innerHTML = data;
       });
     } else {
       console.err('Passwords do not match!');

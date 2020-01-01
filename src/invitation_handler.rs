@@ -16,7 +16,7 @@ impl HandleRequest<CreateInvitation> for DbExecutor {
     type Result = Result<Invitation, ServiceError>;
 
     fn handle(&self, msg: CreateInvitation) -> Self::Result {
-        use crate::schema::invitations::dsl::*;
+        use crate::schema::invitations::dsl::invitations;
         let conn: &PgConnection = &self.0.get().unwrap();
 
         // creating a new Invitation object with expired at time that is 24 hours from now

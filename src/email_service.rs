@@ -36,3 +36,40 @@ pub fn send_invitation(invitation: &Invitation, callback_url: &str) -> Result<()
     .map(|_| debug!("Success"))
     .map_err(|e| ServiceError::BadRequest(format!("Bad request {:?}", e)))
 }
+
+#[cfg(test)]
+mod tests {
+    use chrono::{Duration, Local};
+    use std::env;
+    use std::path::Path;
+    use uuid::Uuid;
+
+    use crate::email_service::send_invitation;
+    use crate::models::Invitation;
+
+    #[test]
+    #[ignore]
+    fn test_send_invitation() {
+        let home_dir = env::var("HOME").expect("No HOME directory...");
+
+        let env_file = format!("{}/.config/rust_auth_server/config.env", home_dir);
+
+        if Path::new(&env_file).exists() {
+            dotenv::from_path(&env_file).ok();
+        } else if Path::new("config.env").exists() {
+            dotenv::from_filename("config.env").ok();
+        } else {
+            dotenv::dotenv().ok();
+        }
+
+        let new_invitation = Invitation {
+            id: Uuid::new_v4(),
+            email: "dboline@mediamath.com".to_string(),
+            expires_at: Local::now().naive_local() + Duration::hours(24),
+        };
+
+        send_invitation(&new_invitation, "test_url").unwrap();
+
+        assert!(false);
+    }
+}
