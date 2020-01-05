@@ -55,7 +55,7 @@ fn _from_request(req: &HttpRequest, pl: &mut Payload) -> Result<LoggedUser, Erro
 
 impl FromRequest for LoggedUser {
     type Error = Error;
-    type Future = Ready<Result<LoggedUser, Error>>;
+    type Future = Ready<Result<Self, Error>>;
     type Config = ();
 
     fn from_request(req: &HttpRequest, pl: &mut Payload) -> Self::Future {

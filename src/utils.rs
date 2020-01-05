@@ -36,7 +36,7 @@ struct Claim {
 impl Claim {
     fn with_email(email: &str) -> Self {
         let domain = env::var("DOMAIN").unwrap_or_else(|_| "localhost".to_string());
-        Claim {
+        Self {
             iss: domain,
             sub: "auth".into(),
             email: email.to_owned(),
@@ -48,7 +48,7 @@ impl Claim {
 
 impl From<Claim> for SlimUser {
     fn from(claims: Claim) -> Self {
-        SlimUser {
+        Self {
             email: claims.email,
         }
     }

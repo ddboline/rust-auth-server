@@ -20,11 +20,11 @@ pub enum ServiceError {
 impl ResponseError for ServiceError {
     fn error_response(&self) -> HttpResponse {
         match *self {
-            ServiceError::InternalServerError => {
+            Self::InternalServerError => {
                 HttpResponse::InternalServerError().json("Internal Server Error, Please try later")
             }
-            ServiceError::BadRequest(ref message) => HttpResponse::BadRequest().json(message),
-            ServiceError::Unauthorized => HttpResponse::Ok()
+            Self::BadRequest(ref message) => HttpResponse::BadRequest().json(message),
+            Self::Unauthorized => HttpResponse::Ok()
                 .content_type("text/html; charset=utf-8")
                 .body(
                     include_str!("../static/login.html")
@@ -38,24 +38,24 @@ impl ResponseError for ServiceError {
 // we can return early in our handlers if UUID provided by the user is not valid
 // and provide a custom message
 impl From<ParseError> for ServiceError {
-    fn from(_: ParseError) -> ServiceError {
-        ServiceError::BadRequest("Invalid UUID".into())
+    fn from(_: ParseError) -> Self {
+        Self::BadRequest("Invalid UUID".into())
     }
 }
 
 impl From<DBError> for ServiceError {
-    fn from(error: DBError) -> ServiceError {
+    fn from(error: DBError) -> Self {
         // Right now we just care about UniqueViolation from diesel
         // But this would be helpful to easily map errors as our app grows
         match error {
             DBError::DatabaseError(kind, info) => {
                 if let DatabaseErrorKind::UniqueViolation = kind {
                     let message = info.details().unwrap_or_else(|| info.message()).to_string();
-                    return ServiceError::BadRequest(message);
+                    return Self::BadRequest(message);
                 }
-                ServiceError::InternalServerError
+                Self::InternalServerError
             }
-            _ => ServiceError::InternalServerError,
+            _ => Self::InternalServerError,
         }
     }
 }

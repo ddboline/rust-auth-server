@@ -25,7 +25,7 @@ pub struct User {
 
 impl User {
     pub fn from_details(email: String, password: String) -> Self {
-        User {
+        Self {
             email,
             password,
             created_at: Local::now().naive_local(),
@@ -48,6 +48,6 @@ pub struct SlimUser {
 
 impl From<User> for SlimUser {
     fn from(user: User) -> Self {
-        SlimUser { email: user.email }
+        Self { email: user.email }
     }
 }

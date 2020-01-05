@@ -43,22 +43,22 @@ impl SesInstance {
                 source: src.to_string(),
                 destination: Destination {
                     to_addresses: Some(vec![dest.to_string()]),
-                    ..Default::default()
+                    ..Destination::default()
                 },
                 message: Message {
                     subject: Content {
                         data: sub.to_string(),
-                        ..Default::default()
+                        ..Content::default()
                     },
                     body: Body {
                         html: Some(Content {
                             data: msg.to_string(),
-                            ..Default::default()
+                            ..Content::default()
                         }),
-                        ..Default::default()
+                        ..Body::default()
                     },
                 },
-                ..Default::default()
+                ..SendEmailRequest::default()
             })
             .sync()
             .map_err(err_msg)
