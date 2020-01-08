@@ -1,5 +1,5 @@
+use anyhow::Error;
 use chrono::{DateTime, Duration, Utc};
-use failure::{err_msg, Error};
 use rusoto_core::Region;
 use rusoto_ses::{Body, Content, Destination, Message, SendEmailRequest, Ses, SesClient};
 use std::collections::HashMap;
@@ -61,7 +61,7 @@ impl SesInstance {
                 ..SendEmailRequest::default()
             })
             .sync()
-            .map_err(err_msg)
+            .map_err(Into::into)
             .map(|_| ())
     }
 }
