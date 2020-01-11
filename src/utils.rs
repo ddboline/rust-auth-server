@@ -44,6 +44,10 @@ impl Claim {
             exp: (Local::now() + Duration::hours(24)).timestamp(),
         }
     }
+
+    pub fn get_email(&self) -> &str {
+        self.email.as_str()
+    }
 }
 
 impl From<Claim> for SlimUser {
