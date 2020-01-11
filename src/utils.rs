@@ -45,8 +45,8 @@ impl Claim {
         }
     }
 
-    pub fn get_email(&self) -> &str {
-        self.email.as_str()
+    pub fn get_email(self) -> String {
+        self.email
     }
 }
 
