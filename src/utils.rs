@@ -19,7 +19,7 @@ pub fn hash_password(plain: &str) -> Result<String, ServiceError> {
 
 // JWT claim
 #[derive(Debug, Serialize, Deserialize)]
-struct Claim {
+pub struct Claim {
     // issuer
     iss: String,
     // subject
@@ -60,9 +60,9 @@ pub fn create_token(data: &SlimUser) -> Result<String, ServiceError> {
         .map_err(|_err| ServiceError::InternalServerError)
 }
 
-pub fn decode_token(token: &str) -> Result<SlimUser, ServiceError> {
+pub fn decode_token(token: &str) -> Result<Claim, ServiceError> {
     decode::<Claim>(token, get_secret().as_ref(), &Validation::default())
-        .map(|data| Ok(data.claims.into()))
+        .map(|data| Ok(data.claims))
         .map_err(|_err| ServiceError::Unauthorized)?
 }
 

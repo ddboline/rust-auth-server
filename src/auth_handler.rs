@@ -46,7 +46,7 @@ pub type LoggedUser = SlimUser;
 
 fn _from_request(req: &HttpRequest, pl: &mut Payload) -> Result<LoggedUser, Error> {
     if let Some(identity) = block_on(Identity::from_request(req, pl))?.identity() {
-        let user: SlimUser = decode_token(&identity)?;
+        let user: SlimUser = decode_token(&identity)?.into();
         Ok(user as LoggedUser)
     } else {
         Err(ServiceError::Unauthorized.into())
