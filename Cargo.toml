@@ -1,6 +1,6 @@
 [package]
 name = "rust_auth_server"
-version = "0.3.2"
+version = "0.3.3"
 license="MPL-2.0+/LGPL-3.0+"
 authors = ["mygnu <tech@hgill.io>"]
 edition = "2018"
