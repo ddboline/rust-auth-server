@@ -20,4 +20,4 @@ pub mod rust_auth_server;
 mod schema;
 mod ses_client;
 mod static_files;
-mod utils;
+pub mod utils;
