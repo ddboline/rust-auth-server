@@ -69,7 +69,5 @@ mod tests {
         };
 
         send_invitation(&new_invitation, "test_url").unwrap();
-
-        assert!(false);
     }
 }
