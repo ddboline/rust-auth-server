@@ -7,7 +7,7 @@ use futures::Future;
 use crate::auth_handler::AuthData;
 use crate::logged_user::LoggedUser;
 use crate::models::{DbExecutor, HandleRequest};
-use crate::utils::create_token;
+use crate::utils::Token;
 
 pub async fn login(
     auth_data: Json<AuthData>,
@@ -17,7 +17,7 @@ pub async fn login(
     block(move || db.handle(auth_data.into_inner()))
         .await
         .map(|(user, token)| {
-            id.remember(token);
+            id.remember(token.into());
             HttpResponse::Ok().json(user)
         })
         .map_err(Into::into)

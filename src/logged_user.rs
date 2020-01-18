@@ -12,7 +12,7 @@ use std::env;
 
 use crate::errors::ServiceError;
 use crate::models::{DbExecutor, User};
-use crate::utils::{decode_token, Claim};
+use crate::utils::{Claim, Token};
 
 lazy_static! {
     pub static ref AUTHORIZED_USERS: AuthorizedUsers = AuthorizedUsers::new();
@@ -40,7 +40,7 @@ fn _from_request(req: &HttpRequest, pl: &mut Payload) -> Result<LoggedUser, acti
         }
     }
     if let Some(identity) = block_on(Identity::from_request(req, pl))?.identity() {
-        let user: LoggedUser = decode_token(&identity)?.into();
+        let user: LoggedUser = Token::decode_token(&identity.into())?.into();
         if AUTHORIZED_USERS.is_authorized(&user) {
             return Ok(user);
         }

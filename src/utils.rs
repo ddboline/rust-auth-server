@@ -3,6 +3,7 @@ use chrono::{Duration, Local};
 use jsonwebtoken::{decode, encode, Header, Validation};
 use log::debug;
 use std::env;
+use derive_more::{Into, From};
 
 use crate::errors::ServiceError;
 use crate::models::SlimUser;
@@ -58,16 +59,21 @@ impl From<Claim> for SlimUser {
     }
 }
 
-pub fn create_token(data: &SlimUser) -> Result<String, ServiceError> {
-    let claims = Claim::with_email(data.email.as_str());
-    encode(&Header::default(), &claims, get_secret().as_ref())
-        .map_err(|_err| ServiceError::InternalServerError)
-}
+#[derive(From, Into)]
+pub struct Token(String);
 
-pub fn decode_token(token: &str) -> Result<Claim, ServiceError> {
-    decode::<Claim>(token, get_secret().as_ref(), &Validation::default())
-        .map(|data| Ok(data.claims))
-        .map_err(|_err| ServiceError::Unauthorized)?
+impl Token {
+    pub fn create_token(data: &SlimUser) -> Result<Token, ServiceError> {
+        let claims = Claim::with_email(data.email.as_str());
+        encode(&Header::default(), &claims, get_secret().as_ref()).map(Into::into)
+            .map_err(|_err| ServiceError::InternalServerError)
+    }
+
+    pub fn decode_token(token: &Token) -> Result<Claim, ServiceError> {
+        decode::<Claim>(&token.0, get_secret().as_ref(), &Validation::default())
+            .map(|data| Ok(data.claims))
+            .map_err(|_err| ServiceError::Unauthorized)?
+    }
 }
 
 fn get_secret() -> String {

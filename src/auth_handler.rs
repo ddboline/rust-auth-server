@@ -11,7 +11,7 @@ use std::task::Poll;
 
 use crate::errors::ServiceError;
 use crate::models::{DbExecutor, HandleRequest, SlimUser, User};
-use crate::utils::{create_token, decode_token};
+use crate::utils::Token;
 
 #[derive(Debug, Deserialize)]
 pub struct AuthData {
@@ -20,7 +20,7 @@ pub struct AuthData {
 }
 
 impl HandleRequest<AuthData> for DbExecutor {
-    type Result = Result<(SlimUser, String), ServiceError>;
+    type Result = Result<(SlimUser, Token), ServiceError>;
     fn handle(&self, msg: AuthData) -> Self::Result {
         use crate::schema::users::dsl::{email, users};
         let conn: &PgConnection = &self.0.get().unwrap();
@@ -31,7 +31,7 @@ impl HandleRequest<AuthData> for DbExecutor {
             if let Ok(matching) = verify(&msg.password, &user.password) {
                 if matching {
                     let user: SlimUser = user.into();
-                    let token = create_token(&user)?;
+                    let token = Token::create_token(&user)?;
                     return Ok((user, token));
                 }
             }
