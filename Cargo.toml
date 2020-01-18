@@ -32,6 +32,9 @@ maplit = "1.0"
 anyhow = "1.0"
 thiserror = "1.0"
 actix-threadpool = "0.3"
+lazy_static = "1.4"
+parking_lot = "0.10"
+tokio = {version="0.2", features=["full"]}
 
 [profile.release]
 lto= true

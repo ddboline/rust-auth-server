@@ -1,13 +1,16 @@
 use actix::{Actor, SyncContext};
+use anyhow::Error;
 use chrono::{Local, NaiveDateTime};
 use diesel::pg::PgConnection;
 use diesel::r2d2::{ConnectionManager, Pool};
+use diesel::RunQueryDsl;
 use std::convert::From;
 use uuid::Uuid;
 
 use crate::schema::{invitations, users};
 
 /// This is db executor actor. can be run in parallel
+#[derive(Clone)]
 pub struct DbExecutor(pub Pool<ConnectionManager<PgConnection>>);
 
 pub trait HandleRequest<T> {
@@ -24,6 +27,12 @@ pub struct User {
 }
 
 impl User {
+    pub fn get_authorized_users(pool: &DbExecutor) -> Result<Vec<Self>, Error> {
+        use crate::schema::users::dsl::users;
+        let conn = pool.0.get()?;
+        users.load(&conn).map_err(Into::into)
+    }
+
     pub fn from_details(email: String, password: String) -> Self {
         Self {
             email,

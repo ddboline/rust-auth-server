@@ -4,7 +4,8 @@ use actix_web::web::{block, Data, Json};
 use actix_web::{web, Error, HttpRequest, HttpResponse, Responder, ResponseError};
 use futures::Future;
 
-use crate::auth_handler::{AuthData, LoggedUser};
+use crate::auth_handler::AuthData;
+use crate::logged_user::LoggedUser;
 use crate::models::{DbExecutor, HandleRequest};
 use crate::utils::create_token;
 
@@ -13,16 +14,13 @@ pub async fn login(
     id: Identity,
     db: Data<DbExecutor>,
 ) -> Result<HttpResponse, Error> {
-    let res = block(move || db.handle(auth_data.into_inner())).await;
-
-    match res {
-        Ok(user) => {
-            let token = create_token(&user)?;
+    block(move || db.handle(auth_data.into_inner()))
+        .await
+        .map(|(user, token)| {
             id.remember(token);
-            Ok(HttpResponse::Ok().json(user))
-        }
-        Err(err) => Ok(err.error_response()),
-    }
+            HttpResponse::Ok().json(user)
+        })
+        .map_err(Into::into)
 }
 
 pub fn logout(id: Identity) -> HttpResponse {

@@ -4,8 +4,8 @@ use actix_web::{web, Error, HttpResponse, ResponseError};
 use futures::Future;
 use maplit::hashmap;
 
-use crate::auth_handler::LoggedUser;
 use crate::change_password_handler::{ChangePassword, UserData};
+use crate::logged_user::LoggedUser;
 use crate::models::{DbExecutor, HandleRequest};
 
 pub async fn change_password_user(

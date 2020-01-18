@@ -7,10 +7,13 @@ use diesel::{r2d2::ConnectionManager, PgConnection};
 use dotenv::dotenv;
 use std::env;
 use std::path::Path;
+use std::time;
+use tokio::time::interval;
 
 use crate::auth_routes;
 use crate::change_password_routes;
 use crate::invitation_routes;
+use crate::logged_user::{fill_auth_from_db, AUTHORIZED_USERS};
 use crate::models::DbExecutor;
 use crate::register_routes;
 use crate::static_files::{
@@ -40,9 +43,21 @@ pub async fn run_auth_server(port: u32) -> std::io::Result<()> {
 
     // create db connection pool
     let manager = ConnectionManager::<PgConnection>::new(database_url);
-    let pool = r2d2::Pool::builder()
-        .build(manager)
-        .expect("Failed to create pool.");
+    let pool = DbExecutor(
+        r2d2::Pool::builder()
+            .build(manager)
+            .expect("Failed to create pool."),
+    );
+
+    async fn _update_db(pool: DbExecutor) {
+        let mut i = interval(time::Duration::from_secs(60));
+        loop {
+            i.tick().await;
+            fill_auth_from_db(&pool).unwrap_or(());
+        }
+    }
+
+    actix_rt::spawn(_update_db(pool.clone()));
 
     HttpServer::new(move || {
         // secret is a random minimum 32 bytes long base 64 string
@@ -50,7 +65,7 @@ pub async fn run_auth_server(port: u32) -> std::io::Result<()> {
         let domain: String = std::env::var("DOMAIN").unwrap_or_else(|_| "localhost".to_string());
 
         App::new()
-            .data(DbExecutor(pool.clone()))
+            .data(pool.clone())
             .wrap(Logger::default())
             .wrap(IdentityService::new(
                 CookieIdentityPolicy::new(secret.as_bytes())

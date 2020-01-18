@@ -1,28 +1,30 @@
+use actix_threadpool::BlockingError;
 use actix_web::{error::ResponseError, HttpResponse};
 use derive_more::Display;
 use diesel::result::{DatabaseErrorKind, Error as DBError};
 use std::convert::From;
+use std::fmt::Debug;
+use thiserror::Error;
 use uuid::parser::ParseError;
 
-#[derive(Debug, Display)]
+#[derive(Debug, Error)]
 pub enum ServiceError {
-    #[display(fmt = "Internal Server Error")]
+    #[error("Internal Server Error")]
     InternalServerError,
-
-    #[display(fmt = "BadRequest: {}", _0)]
+    #[error("BadRequest: {0}")]
     BadRequest(String),
-
-    #[display(fmt = "Unauthorized")]
+    #[error("Unauthorized")]
     Unauthorized,
+    #[error("DBError")]
+    DbError(#[from] DBError),
+    #[error("blocking error {0}")]
+    BlockingError(String),
 }
 
 // impl ResponseError trait allows to convert our errors into http responses with appropriate data
 impl ResponseError for ServiceError {
     fn error_response(&self) -> HttpResponse {
         match *self {
-            Self::InternalServerError => {
-                HttpResponse::InternalServerError().json("Internal Server Error, Please try later")
-            }
             Self::BadRequest(ref message) => HttpResponse::BadRequest().json(message),
             Self::Unauthorized => HttpResponse::Ok()
                 .content_type("text/html; charset=utf-8")
@@ -31,6 +33,9 @@ impl ResponseError for ServiceError {
                         .replace("main.css", "../auth/main.css")
                         .replace("main.js", "../auth/main.js"),
                 ),
+            _ => {
+                HttpResponse::InternalServerError().json("Internal Server Error, Please try later")
+            }
         }
     }
 }
@@ -43,19 +48,8 @@ impl From<ParseError> for ServiceError {
     }
 }
 
-impl From<DBError> for ServiceError {
-    fn from(error: DBError) -> Self {
-        // Right now we just care about UniqueViolation from diesel
-        // But this would be helpful to easily map errors as our app grows
-        match error {
-            DBError::DatabaseError(kind, info) => {
-                if let DatabaseErrorKind::UniqueViolation = kind {
-                    let message = info.details().unwrap_or_else(|| info.message()).to_string();
-                    return Self::BadRequest(message);
-                }
-                Self::InternalServerError
-            }
-            _ => Self::InternalServerError,
-        }
+impl<T: Debug> From<BlockingError<T>> for ServiceError {
+    fn from(item: BlockingError<T>) -> Self {
+        Self::BlockingError(item.to_string())
     }
 }

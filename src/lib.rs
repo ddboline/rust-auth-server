@@ -13,6 +13,7 @@ mod email_service;
 mod errors;
 mod invitation_handler;
 mod invitation_routes;
+pub mod logged_user;
 mod models;
 mod register_handler;
 mod register_routes;

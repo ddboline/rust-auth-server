@@ -11,7 +11,7 @@ use std::task::Poll;
 
 use crate::errors::ServiceError;
 use crate::models::{DbExecutor, HandleRequest, SlimUser, User};
-use crate::utils::decode_token;
+use crate::utils::{create_token, decode_token};
 
 #[derive(Debug, Deserialize)]
 pub struct AuthData {
@@ -20,7 +20,7 @@ pub struct AuthData {
 }
 
 impl HandleRequest<AuthData> for DbExecutor {
-    type Result = Result<SlimUser, ServiceError>;
+    type Result = Result<(SlimUser, String), ServiceError>;
     fn handle(&self, msg: AuthData) -> Self::Result {
         use crate::schema::users::dsl::{email, users};
         let conn: &PgConnection = &self.0.get().unwrap();
@@ -30,35 +30,14 @@ impl HandleRequest<AuthData> for DbExecutor {
         if let Some(user) = items.pop() {
             if let Ok(matching) = verify(&msg.password, &user.password) {
                 if matching {
-                    return Ok(user.into());
+                    let user: SlimUser = user.into();
+                    let token = create_token(&user)?;
+                    return Ok((user, token));
                 }
             }
         }
         Err(ServiceError::BadRequest(
             "Username and Password don't match".into(),
         ))
-    }
-}
-
-// we need the same data
-// simple aliasing makes the intentions clear and its more readable
-pub type LoggedUser = SlimUser;
-
-fn _from_request(req: &HttpRequest, pl: &mut Payload) -> Result<LoggedUser, Error> {
-    if let Some(identity) = block_on(Identity::from_request(req, pl))?.identity() {
-        let user: SlimUser = decode_token(&identity)?.into();
-        Ok(user as LoggedUser)
-    } else {
-        Err(ServiceError::Unauthorized.into())
-    }
-}
-
-impl FromRequest for LoggedUser {
-    type Error = Error;
-    type Future = Ready<Result<Self, Error>>;
-    type Config = ();
-
-    fn from_request(req: &HttpRequest, pl: &mut Payload) -> Self::Future {
-        ready(_from_request(req, pl))
     }
 }
