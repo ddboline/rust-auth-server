@@ -1,5 +1,6 @@
 use chrono::{Duration, Local};
 use diesel::{self, PgConnection, RunQueryDsl};
+use serde::{Deserialize, Serialize};
 use std::env::var;
 use uuid::Uuid;
 
@@ -17,7 +18,7 @@ impl HandleRequest<CreateInvitation> for DbExecutor {
 
     fn handle(&self, msg: CreateInvitation) -> Self::Result {
         use crate::schema::invitations::dsl::invitations;
-        let conn: &PgConnection = &self.0.get().unwrap();
+        let conn = self.0.get()?;
 
         // creating a new Invitation object with expired at time that is 24 hours from now
         let new_invitation = Invitation {
@@ -28,7 +29,7 @@ impl HandleRequest<CreateInvitation> for DbExecutor {
 
         let inserted_invitation = diesel::insert_into(invitations)
             .values(&new_invitation)
-            .get_result(conn)?;
+            .get_result(&conn)?;
 
         let callback_url = var("CALLBACK_URL")
             .unwrap_or_else(|_| "http://localhost:3000/register.html".to_string());

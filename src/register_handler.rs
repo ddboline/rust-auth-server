@@ -1,5 +1,6 @@
 use chrono::Local;
 use diesel::{ExpressionMethods, PgConnection, QueryDsl, RunQueryDsl};
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::errors::ServiceError;
@@ -24,7 +25,7 @@ impl HandleRequest<RegisterUser> for DbExecutor {
     fn handle(&self, msg: RegisterUser) -> Self::Result {
         use crate::schema::invitations::dsl::{id, invitations};
         use crate::schema::users::dsl::users;
-        let conn: &PgConnection = &self.0.get().unwrap();
+        let conn = self.0.get()?;
 
         // try parsing the string provided by the user as url parameter
         // return early with error that will be converted to ServiceError
@@ -32,7 +33,7 @@ impl HandleRequest<RegisterUser> for DbExecutor {
 
         invitations
             .filter(id.eq(invitation_id))
-            .load::<Invitation>(conn)
+            .load::<Invitation>(&conn)
             .map_err(|_db_error| ServiceError::BadRequest("Invalid Invitation".into()))
             .and_then(|mut result| {
                 if let Some(invitation) = result.pop() {
@@ -42,7 +43,7 @@ impl HandleRequest<RegisterUser> for DbExecutor {
                         let password: String = hash_password(&msg.password)?;
                         let user = User::from_details(invitation.email, password);
                         let inserted_user: User =
-                            diesel::insert_into(users).values(&user).get_result(conn)?;
+                            diesel::insert_into(users).values(&user).get_result(&conn)?;
 
                         return Ok(inserted_user.into());
                     }

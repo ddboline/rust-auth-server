@@ -1,5 +1,6 @@
 use chrono::Local;
 use diesel::{ExpressionMethods, PgConnection, QueryDsl, RunQueryDsl};
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::errors::ServiceError;
@@ -24,12 +25,12 @@ impl HandleRequest<ChangePassword> for DbExecutor {
     fn handle(&self, msg: ChangePassword) -> Self::Result {
         use crate::schema::invitations::dsl::{id, invitations};
         use crate::schema::users::dsl::{email, password, users};
-        let conn: &PgConnection = &self.0.get().unwrap();
+        let conn = self.0.get()?;
         let password_: String = hash_password(&msg.password)?;
 
         diesel::update(users.filter(email.eq(msg.email)))
             .set(password.eq(password_))
-            .execute(conn)
+            .execute(&conn)
             .map_err(|_db_error| ServiceError::BadRequest("Update failed".into()))
             .map(|changed| changed > 0)
     }

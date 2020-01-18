@@ -1,9 +1,10 @@
 use bcrypt::{hash, DEFAULT_COST};
 use chrono::{Duration, Local};
+use derive_more::{From, Into};
 use jsonwebtoken::{decode, encode, Header, Validation};
 use log::debug;
+use serde::{Deserialize, Serialize};
 use std::env;
-use derive_more::{Into, From};
 
 use crate::errors::ServiceError;
 use crate::models::SlimUser;
@@ -65,7 +66,8 @@ pub struct Token(String);
 impl Token {
     pub fn create_token(data: &SlimUser) -> Result<Token, ServiceError> {
         let claims = Claim::with_email(data.email.as_str());
-        encode(&Header::default(), &claims, get_secret().as_ref()).map(Into::into)
+        encode(&Header::default(), &claims, get_secret().as_ref())
+            .map(Into::into)
             .map_err(|_err| ServiceError::InternalServerError)
     }
 

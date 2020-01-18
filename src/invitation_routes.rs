@@ -2,6 +2,7 @@ use actix::Addr;
 use actix_web::web::{block, Data, Json};
 use actix_web::{web, Error, HttpResponse, ResponseError};
 use futures::future::Future;
+use serde::{Deserialize, Serialize};
 use std::env;
 
 use crate::invitation_handler::CreateInvitation;

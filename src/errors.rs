@@ -2,6 +2,7 @@ use actix_threadpool::BlockingError;
 use actix_web::{error::ResponseError, HttpResponse};
 use derive_more::Display;
 use diesel::result::{DatabaseErrorKind, Error as DBError};
+use r2d2::Error as R2D2Error;
 use std::convert::From;
 use std::fmt::Debug;
 use thiserror::Error;
@@ -19,6 +20,8 @@ pub enum ServiceError {
     DbError(#[from] DBError),
     #[error("blocking error {0}")]
     BlockingError(String),
+    #[error("R2D2 Error")]
+    R2D2Error(#[from] R2D2Error),
 }
 
 // impl ResponseError trait allows to convert our errors into http responses with appropriate data
