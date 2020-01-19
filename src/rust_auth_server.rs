@@ -21,6 +21,14 @@ use crate::static_files::{
 };
 
 pub async fn run_auth_server(port: u32) -> std::io::Result<()> {
+    async fn _update_db(pool: DbExecutor) {
+        let mut i = interval(time::Duration::from_secs(60));
+        loop {
+            i.tick().await;
+            fill_auth_from_db(&pool).unwrap_or(());
+        }
+    }
+
     let home_dir = env::var("HOME").expect("No HOME directory...");
 
     let env_file = format!("{}/.config/rust_auth_server/config.env", home_dir);
@@ -48,14 +56,6 @@ pub async fn run_auth_server(port: u32) -> std::io::Result<()> {
             .build(manager)
             .expect("Failed to create pool."),
     );
-
-    async fn _update_db(pool: DbExecutor) {
-        let mut i = interval(time::Duration::from_secs(60));
-        loop {
-            i.tick().await;
-            fill_auth_from_db(&pool).unwrap_or(());
-        }
-    }
 
     actix_rt::spawn(_update_db(pool.clone()));
 

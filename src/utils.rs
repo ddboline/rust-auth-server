@@ -64,14 +64,14 @@ impl From<Claim> for SlimUser {
 pub struct Token(String);
 
 impl Token {
-    pub fn create_token(data: &SlimUser) -> Result<Token, ServiceError> {
+    pub fn create_token(data: &SlimUser) -> Result<Self, ServiceError> {
         let claims = Claim::with_email(data.email.as_str());
         encode(&Header::default(), &claims, get_secret().as_ref())
             .map(Into::into)
             .map_err(|_err| ServiceError::InternalServerError)
     }
 
-    pub fn decode_token(token: &Token) -> Result<Claim, ServiceError> {
+    pub fn decode_token(token: &Self) -> Result<Claim, ServiceError> {
         decode::<Claim>(&token.0, get_secret().as_ref(), &Validation::default())
             .map(|data| Ok(data.claims))
             .map_err(|_err| ServiceError::Unauthorized)?
