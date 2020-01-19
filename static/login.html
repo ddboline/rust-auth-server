@@ -28,7 +28,7 @@
     var data = JSON.stringify({"email": email.value, "password": password.value});
     var xmlhttp = new XMLHttpRequest();
     xmlhttp.onload = function() {
-       location.replace("/api/auth");
+       location.reload();
     }
     xmlhttp.open( "POST", '/api/auth' , true );
     xmlhttp.setRequestHeader("Content-Type", "application/json");
