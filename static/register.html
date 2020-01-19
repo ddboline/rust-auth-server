@@ -34,7 +34,7 @@
     if (password.value == password_repeat.value) {
       let invitation_id = getUrlVars().id;
 
-      post('../api/register/' + invitation_id, { password: password.value }).then(data => {
+      post('/api/register/' + invitation_id, { password: password.value }).then(data => {
         password.value = '';
         document.getElementsByClassName("login").innerHTML = data;
       });
