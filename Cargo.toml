@@ -34,6 +34,7 @@ actix-threadpool = "0.3"
 lazy_static = "1.4"
 parking_lot = "0.10"
 tokio = {version="0.2", features=["full"]}
+sts_profile_auth = "0.3"
 
 [profile.release]
 lto= true

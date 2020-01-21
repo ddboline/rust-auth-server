@@ -9,6 +9,7 @@ use std::io::Read;
 use std::path::Path;
 use std::thread::sleep;
 use std::time;
+use sts_profile_auth::get_client_sts;
 
 #[derive(Clone)]
 pub struct SesInstance {
@@ -32,7 +33,7 @@ impl SesInstance {
     pub fn new(region: Option<Region>) -> Self {
         let region = region.unwrap_or(Region::UsEast1);
         Self {
-            ses_client: SesClient::new(region.clone()),
+            ses_client: get_client_sts!(SesClient, region.clone()).expect("Failed to open SesClient"),
             region,
         }
     }
