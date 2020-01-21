@@ -22,7 +22,7 @@
   function sendVerificationEmail() {
     let email = document.querySelector('#email');
 
-    post('../api/invitation', { email: email.value }).then(data => {
+    post('/api/invitation', { email: email.value }).then(data => {
       document.getElementsByClassName("login").innerHTML = "Please check your email: " + data;
       email.value = '';
     });

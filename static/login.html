@@ -28,9 +28,9 @@
     var data = JSON.stringify({"email": email.value, "password": password.value});
     var xmlhttp = new XMLHttpRequest();
     xmlhttp.onload = function() {
-       location.replace("../api/auth");
+       location.reload();
     }
-    xmlhttp.open( "POST", '../api/auth' , true );
+    xmlhttp.open( "POST", '/api/auth' , true );
     xmlhttp.setRequestHeader("Content-Type", "application/json");
     xmlhttp.send(data);
   }
@@ -43,7 +43,7 @@
       document.getElementsByClassName("login").innerHTML = "Please check your email.";
     }
     var data = JSON.stringify({"email": email.value});
-    xmlhttp.open( "POST", "../api/password_change", true );
+    xmlhttp.open( "POST", "/api/password_change", true );
     xmlhttp.setRequestHeader("Content-Type", "application/json");
     xmlhttp.send(data);
   }
@@ -56,7 +56,7 @@
       document.getElementsByClassName("login").innerHTML = "Please check your email.";
     }
     var data = JSON.stringify({"email": email.value});
-    xmlhttp.open( "POST", "../api/invitation", true );
+    xmlhttp.open( "POST", "/api/invitation", true );
     xmlhttp.setRequestHeader("Content-Type", "application/json");
     xmlhttp.send(data);
   }
