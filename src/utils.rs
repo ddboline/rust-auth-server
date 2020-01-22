@@ -1,13 +1,15 @@
 use bcrypt::{hash, DEFAULT_COST};
 use chrono::{Duration, Local};
 use derive_more::{From, Into};
-use jsonwebtoken::{decode, encode, Header, Validation};
+use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use log::debug;
 use serde::{Deserialize, Serialize};
 use std::env;
 
 use crate::errors::ServiceError;
 use crate::models::SlimUser;
+
+const DEFAULT_ALGORITHM: Algorithm = Algorithm::HS256;
 
 pub fn hash_password(plain: &str) -> Result<String, ServiceError> {
     // get the hashing cost from the env variable or use default
@@ -66,15 +68,23 @@ pub struct Token(String);
 impl Token {
     pub fn create_token(data: &SlimUser) -> Result<Self, ServiceError> {
         let claims = Claim::with_email(data.email.as_str());
-        encode(&Header::default(), &claims, get_secret().as_ref())
-            .map(Into::into)
-            .map_err(|_err| ServiceError::InternalServerError)
+        encode(
+            &Header::new(DEFAULT_ALGORITHM),
+            &claims,
+            &EncodingKey::from_secret(get_secret().as_ref()),
+        )
+        .map(Into::into)
+        .map_err(|_err| ServiceError::InternalServerError)
     }
 
     pub fn decode_token(token: &Self) -> Result<Claim, ServiceError> {
-        decode::<Claim>(&token.0, get_secret().as_ref(), &Validation::default())
-            .map(|data| Ok(data.claims))
-            .map_err(|_err| ServiceError::Unauthorized)?
+        decode::<Claim>(
+            &token.0,
+            &DecodingKey::from_secret(get_secret().as_ref()),
+            &Validation::new(DEFAULT_ALGORITHM),
+        )
+        .map(|data| Ok(data.claims))
+        .map_err(|_err| ServiceError::Unauthorized)?
     }
 }
 

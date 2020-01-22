@@ -33,7 +33,8 @@ impl SesInstance {
     pub fn new(region: Option<Region>) -> Self {
         let region = region.unwrap_or(Region::UsEast1);
         Self {
-            ses_client: get_client_sts!(SesClient, region.clone()).expect("Failed to open SesClient"),
+            ses_client: get_client_sts!(SesClient, region.clone())
+                .expect("Failed to open SesClient"),
             region,
         }
     }
