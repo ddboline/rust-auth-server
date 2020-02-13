@@ -1,5 +1,5 @@
 use actix::Addr;
-use actix_web::web::{block, Data, Json, Path};
+use actix_web::web::{Data, Json, Path};
 use actix_web::{web, Error, HttpResponse, ResponseError};
 use futures::Future;
 
@@ -17,7 +17,7 @@ pub async fn register_user(
         password: user_data.password.clone(),
     };
 
-    let db_response = block(move || db.handle(msg)).await;
+    let db_response = db.handle(msg).await;
     match db_response {
         Ok(slim_user) => Ok(HttpResponse::Ok().json(slim_user)),
         Err(service_error) => Ok(service_error.error_response()),

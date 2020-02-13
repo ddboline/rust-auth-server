@@ -39,30 +39,37 @@ impl SesInstance {
         }
     }
 
-    pub fn send_email(&self, src: &str, dest: &str, sub: &str, msg: &str) -> Result<(), Error> {
-        self.ses_client
-            .send_email(SendEmailRequest {
-                source: src.to_string(),
-                destination: Destination {
-                    to_addresses: Some(vec![dest.to_string()]),
-                    ..Destination::default()
+    pub async fn send_email(
+        &self,
+        src: &str,
+        dest: &str,
+        sub: &str,
+        msg: &str,
+    ) -> Result<(), Error> {
+        let req = SendEmailRequest {
+            source: src.to_string(),
+            destination: Destination {
+                to_addresses: Some(vec![dest.to_string()]),
+                ..Destination::default()
+            },
+            message: Message {
+                subject: Content {
+                    data: sub.to_string(),
+                    ..Content::default()
                 },
-                message: Message {
-                    subject: Content {
-                        data: sub.to_string(),
+                body: Body {
+                    html: Some(Content {
+                        data: msg.to_string(),
                         ..Content::default()
-                    },
-                    body: Body {
-                        html: Some(Content {
-                            data: msg.to_string(),
-                            ..Content::default()
-                        }),
-                        ..Body::default()
-                    },
+                    }),
+                    ..Body::default()
                 },
-                ..SendEmailRequest::default()
-            })
-            .sync()
+            },
+            ..SendEmailRequest::default()
+        };
+        self.ses_client
+            .send_email(req)
+            .await
             .map_err(Into::into)
             .map(|_| ())
     }

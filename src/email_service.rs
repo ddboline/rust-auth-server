@@ -6,7 +6,10 @@ use crate::errors::ServiceError;
 use crate::models::Invitation;
 use crate::ses_client::SesInstance;
 
-pub fn send_invitation(invitation: &Invitation, callback_url: &str) -> Result<(), ServiceError> {
+pub async fn send_invitation(
+    invitation: &Invitation,
+    callback_url: &str,
+) -> Result<(), ServiceError> {
     let ses = SesInstance::new(None);
 
     let sending_email =
@@ -33,6 +36,7 @@ pub fn send_invitation(invitation: &Invitation, callback_url: &str) -> Result<()
         "You have been invited to join Simple-Auth-Server Rust",
         &email_body,
     )
+    .await
     .map(|_| debug!("Success"))
     .map_err(|e| ServiceError::BadRequest(format!("Bad request {:?}", e)))
 }
@@ -47,9 +51,9 @@ mod tests {
     use crate::email_service::send_invitation;
     use crate::models::Invitation;
 
-    #[test]
+    #[tokio::test]
     #[ignore]
-    fn test_send_invitation() {
+    async fn test_send_invitation() {
         let home_dir = env::var("HOME").expect("No HOME directory...");
 
         let env_file = format!("{}/.config/rust_auth_server/config.env", home_dir);
@@ -68,6 +72,6 @@ mod tests {
             expires_at: Local::now().naive_local() + Duration::hours(24),
         };
 
-        send_invitation(&new_invitation, "test_url").unwrap();
+        send_invitation(&new_invitation, "test_url").await.unwrap();
     }
 }

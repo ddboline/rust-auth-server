@@ -6,6 +6,7 @@ use r2d2::Error as R2D2Error;
 use std::convert::From;
 use std::fmt::Debug;
 use thiserror::Error;
+use tokio::task::JoinError;
 use uuid::parser::ParseError;
 
 #[derive(Debug, Error)]
@@ -20,8 +21,10 @@ pub enum ServiceError {
     DbError(#[from] DBError),
     #[error("blocking error {0}")]
     BlockingError(String),
-    #[error("R2D2 Error")]
+    #[error("R2D2 Error {0}")]
     R2D2Error(#[from] R2D2Error),
+    #[error("JoinError {0}")]
+    JoinError(#[from] JoinError),
 }
 
 // impl ResponseError trait allows to convert our errors into http responses with appropriate data

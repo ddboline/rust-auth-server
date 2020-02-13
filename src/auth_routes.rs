@@ -1,6 +1,6 @@
 use actix::Addr;
 use actix_identity::Identity;
-use actix_web::web::{block, Data, Json};
+use actix_web::web::{Data, Json};
 use actix_web::{web, Error, HttpRequest, HttpResponse, Responder, ResponseError};
 use futures::Future;
 
@@ -14,7 +14,7 @@ pub async fn login(
     id: Identity,
     db: Data<DbExecutor>,
 ) -> Result<HttpResponse, Error> {
-    block(move || db.handle(auth_data.into_inner()))
+    db.handle(auth_data.into_inner())
         .await
         .map(|(user, token)| {
             id.remember(token.into());

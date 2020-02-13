@@ -1,6 +1,7 @@
 use actix_identity::Identity;
 use actix_web::FromRequest;
 use actix_web::{dev::Payload, Error, HttpRequest};
+use async_trait::async_trait;
 use bcrypt::verify;
 use diesel::{ExpressionMethods, PgConnection, QueryDsl, RunQueryDsl};
 use futures::executor::block_on;
@@ -9,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use std::future::Future;
 use std::pin::Pin;
 use std::task::Poll;
+use tokio::task::spawn_blocking;
 
 use crate::errors::ServiceError;
 use crate::models::{DbExecutor, HandleRequest, SlimUser, User};
@@ -20,25 +22,32 @@ pub struct AuthData {
     pub password: String,
 }
 
+#[async_trait]
 impl HandleRequest<AuthData> for DbExecutor {
     type Result = Result<(SlimUser, Token), ServiceError>;
-    fn handle(&self, msg: AuthData) -> Self::Result {
+
+    async fn handle(&self, msg: AuthData) -> Self::Result {
         use crate::schema::users::dsl::{email, users};
-        let conn = self.0.get()?;
 
-        let mut items = users.filter(email.eq(&msg.email)).load::<User>(&conn)?;
+        let dbex = self.clone();
+        spawn_blocking(move || {
+            let conn = dbex.0.get()?;
+            let email_ = msg.email.clone();
+            let mut items = users.filter(email.eq(&email_)).load::<User>(&conn)?;
 
-        if let Some(user) = items.pop() {
-            if let Ok(matching) = verify(&msg.password, &user.password) {
-                if matching {
-                    let user: SlimUser = user.into();
-                    let token = Token::create_token(&user)?;
-                    return Ok((user, token));
+            if let Some(user) = items.pop() {
+                if let Ok(matching) = verify(&msg.password, &user.password) {
+                    if matching {
+                        let user: SlimUser = user.into();
+                        let token = Token::create_token(&user)?;
+                        return Ok((user, token));
+                    }
                 }
             }
-        }
-        Err(ServiceError::BadRequest(
-            "Username and Password don't match".into(),
-        ))
+            Err(ServiceError::BadRequest(
+                "Username and Password don't match".into(),
+            ))
+        })
+        .await?
     }
 }
