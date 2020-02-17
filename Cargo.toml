@@ -36,6 +36,8 @@ lazy_static = "1.4"
 parking_lot = "0.10"
 tokio = {version="0.2", features=["full"]}
 async-trait = "0.1"
+evmap = "9.0.0-beta.2"
+thread_local = "1.0"
 
 [profile.release]
 lto= true

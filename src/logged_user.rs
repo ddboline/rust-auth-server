@@ -58,55 +58,93 @@ impl FromRequest for LoggedUser {
     }
 }
 
-#[derive(Clone, Debug, Copy)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
 enum AuthStatus {
     Authorized(DateTime<Utc>),
     NotAuthorized,
 }
 
-#[derive(Debug, Default)]
-pub struct AuthorizedUsers(RwLock<HashMap<LoggedUser, AuthStatus>>);
+use evmap::shallow_copy::ShallowCopy;
+use evmap::{ReadHandle, ReadHandleFactory, Values, WriteHandle};
+use parking_lot::Mutex;
+use std::mem::ManuallyDrop;
+use std::sync::Arc;
+use thread_local::ThreadLocal;
+
+impl ShallowCopy for AuthStatus {
+    unsafe fn shallow_copy(&self) -> ManuallyDrop<Self> {
+        ManuallyDrop::new(*self)
+    }
+}
+
+#[derive(Debug)]
+pub struct AuthorizedUsers {
+    reader: Arc<ThreadLocal<ReadHandle<LoggedUser, AuthStatus>>>,
+    factory: ReadHandleFactory<LoggedUser, AuthStatus>,
+    writer: Mutex<WriteHandle<LoggedUser, AuthStatus>>,
+}
 
 impl AuthorizedUsers {
     pub fn new() -> Self {
-        Self(RwLock::new(HashMap::new()))
+        let (reader, writer) = evmap::new::<LoggedUser, AuthStatus>();
+        Self {
+            reader: Arc::new(ThreadLocal::new()),
+            factory: reader.factory(),
+            writer: Mutex::new(writer),
+        }
+    }
+
+    fn get_reader(&self) -> &ReadHandle<LoggedUser, AuthStatus> {
+        self.reader.get_or(|| self.factory.handle())
     }
 
     pub fn is_authorized(&self, user: &LoggedUser) -> bool {
-        if let Some(AuthStatus::Authorized(last_time)) = self.0.read().get(user) {
-            let current_time = Utc::now();
-            if (current_time - *last_time).num_minutes() < 15 {
-                return true;
+        if let Some(guard) = self.get_reader().get(user) {
+            for val in guard.iter() {
+                if let AuthStatus::Authorized(last_time) = val {
+                    let current_time = Utc::now();
+                    if (current_time - *last_time).num_minutes() < 15 {
+                        return true;
+                    }
+                }
             }
         }
         false
     }
 
-    pub fn store_auth(&self, user: LoggedUser, is_auth: bool) -> Result<(), anyhow::Error> {
+    pub fn store_auth(&self, users: &[LoggedUser], is_auth: bool) -> Result<(), anyhow::Error> {
         let current_time = Utc::now();
         let status = if is_auth {
             AuthStatus::Authorized(current_time)
         } else {
             AuthStatus::NotAuthorized
         };
-        self.0.write().insert(user, status);
+        let mut writer = self.writer.lock();
+        for user in users {
+            writer.insert(user.clone(), status);
+        }
+        writer.refresh();
         Ok(())
     }
 
     pub fn merge_users(&self, users: &[LoggedUser]) -> Result<(), anyhow::Error> {
-        for user in self.0.read().keys() {
-            if !users.contains(&user) {
-                self.store_auth(user.clone(), false)?;
+        let mut new_users = Vec::new();
+        for (user, _) in self.get_reader().read().iter() {
+            if !users.contains(user) {
+                new_users.push(user.clone());
             }
         }
-        for user in users {
-            self.store_auth(user.clone(), true)?;
-        }
+        self.store_auth(&new_users, false)?;
+        self.store_auth(users, true)?;
         Ok(())
     }
 
     pub fn get_keys(&self) -> Vec<LoggedUser> {
-        self.0.read().keys().cloned().collect()
+        self.get_reader()
+            .read()
+            .iter()
+            .map(|(k, _)| k.clone())
+            .collect()
     }
 }
 
