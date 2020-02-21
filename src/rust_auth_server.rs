@@ -24,8 +24,8 @@ pub async fn run_auth_server(port: u32) -> std::io::Result<()> {
     async fn _update_db(pool: DbExecutor) {
         let mut i = interval(time::Duration::from_secs(60));
         loop {
-            i.tick().await;
             fill_auth_from_db(&pool).unwrap_or(());
+            i.tick().await;
         }
     }
 

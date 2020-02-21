@@ -2,10 +2,12 @@ use async_trait::async_trait;
 use chrono::Local;
 use diesel::{ExpressionMethods, PgConnection, QueryDsl, RunQueryDsl};
 use serde::{Deserialize, Serialize};
+use std::atomic::Ordering;
 use tokio::task::spawn_blocking;
 use uuid::Uuid;
 
 use crate::errors::ServiceError;
+use crate::logged_user::TRIGGER_DB_UPDATE;
 use crate::models::{DbExecutor, HandleRequest, Invitation, SlimUser, User};
 use crate::utils::hash_password;
 
@@ -50,7 +52,7 @@ impl HandleRequest<RegisterUser> for DbExecutor {
                             let user = User::from_details(invitation.email, password);
                             let inserted_user: User =
                                 diesel::insert_into(users).values(&user).get_result(&conn)?;
-
+                            TRIGGER_DB_UPDATE.set();
                             return Ok(inserted_user.into());
                         }
                     }
