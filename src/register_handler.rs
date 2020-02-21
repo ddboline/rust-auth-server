@@ -2,7 +2,6 @@ use async_trait::async_trait;
 use chrono::Local;
 use diesel::{ExpressionMethods, PgConnection, QueryDsl, RunQueryDsl};
 use serde::{Deserialize, Serialize};
-use std::atomic::Ordering;
 use tokio::task::spawn_blocking;
 use uuid::Uuid;
 
