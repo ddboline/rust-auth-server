@@ -24,16 +24,15 @@ pub async fn run_auth_server(port: u32) -> std::io::Result<()> {
     async fn _update_db(pool: DbExecutor) {
         let mut i = interval(time::Duration::from_secs(60));
         loop {
-            i.tick().await;
             fill_auth_from_db(&pool).unwrap_or(());
+            i.tick().await;
         }
     }
 
-    let home_dir = env::var("HOME").expect("No HOME directory...");
+    let config_dir = dirs::config_dir().expect("No CONFIG directory");
+    let env_file = config_dir.join("rust_auth_server").join("config.env");
 
-    let env_file = format!("{}/.config/rust_auth_server/config.env", home_dir);
-
-    if Path::new(&env_file).exists() {
+    if env_file.exists() {
         dotenv::from_path(&env_file).ok();
     } else if Path::new("config.env").exists() {
         dotenv::from_filename("config.env").ok();

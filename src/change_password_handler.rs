@@ -1,6 +1,8 @@
+use async_trait::async_trait;
 use chrono::Local;
 use diesel::{ExpressionMethods, PgConnection, QueryDsl, RunQueryDsl};
 use serde::{Deserialize, Serialize};
+use tokio::task::spawn_blocking;
 use uuid::Uuid;
 
 use crate::errors::ServiceError;
@@ -20,18 +22,25 @@ pub struct ChangePassword {
     pub password: String,
 }
 
+#[async_trait]
 impl HandleRequest<ChangePassword> for DbExecutor {
     type Result = Result<bool, ServiceError>;
-    fn handle(&self, msg: ChangePassword) -> Self::Result {
+
+    async fn handle(&self, msg: ChangePassword) -> Self::Result {
         use crate::schema::invitations::dsl::{id, invitations};
         use crate::schema::users::dsl::{email, password, users};
-        let conn = self.0.get()?;
-        let password_: String = hash_password(&msg.password)?;
 
-        diesel::update(users.filter(email.eq(msg.email)))
-            .set(password.eq(password_))
-            .execute(&conn)
-            .map_err(|_db_error| ServiceError::BadRequest("Update failed".into()))
-            .map(|changed| changed > 0)
+        let dbex = self.clone();
+        spawn_blocking(move || {
+            let conn = dbex.0.get()?;
+            let password_: String = hash_password(&msg.password)?;
+
+            diesel::update(users.filter(email.eq(msg.email)))
+                .set(password.eq(password_))
+                .execute(&conn)
+                .map_err(|_db_error| ServiceError::BadRequest("Update failed".into()))
+                .map(|changed| changed > 0)
+        })
+        .await?
     }
 }

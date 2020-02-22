@@ -1,5 +1,6 @@
 use actix::{Actor, SyncContext};
 use anyhow::Error;
+use async_trait::async_trait;
 use chrono::{Local, NaiveDateTime};
 use diesel::pg::PgConnection;
 use diesel::r2d2::{ConnectionManager, Pool};
@@ -14,9 +15,13 @@ use crate::schema::{invitations, users};
 #[derive(Clone)]
 pub struct DbExecutor(pub Pool<ConnectionManager<PgConnection>>);
 
-pub trait HandleRequest<T> {
+#[async_trait]
+pub trait HandleRequest<T>
+where
+    T: 'static,
+{
     type Result;
-    fn handle(&self, req: T) -> Self::Result;
+    async fn handle(&self, req: T) -> Self::Result;
 }
 
 #[derive(Debug, Serialize, Deserialize, Queryable, Insertable)]
@@ -43,7 +48,7 @@ impl User {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Queryable, Insertable)]
+#[derive(Debug, Serialize, Deserialize, Queryable, Insertable, Clone)]
 #[table_name = "invitations"]
 pub struct Invitation {
     pub id: Uuid,

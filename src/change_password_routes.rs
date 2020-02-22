@@ -1,5 +1,5 @@
 use actix::Addr;
-use actix_web::web::{block, Data, Json};
+use actix_web::web::{Data, Json};
 use actix_web::{web, Error, HttpResponse, ResponseError};
 use futures::Future;
 use maplit::hashmap;
@@ -19,7 +19,7 @@ pub async fn change_password_user(
         password: user_data.password.clone(),
     };
 
-    let db_response = block(move || db.handle(msg)).await;
+    let db_response = db.handle(msg).await;
 
     match db_response {
         Ok(success) => {

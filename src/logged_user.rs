@@ -9,6 +9,8 @@ use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::env;
+use std::sync::atomic::{AtomicBool, Ordering};
+use tokio::sync::mpsc::Receiver;
 
 use crate::errors::ServiceError;
 use crate::models::{DbExecutor, User};
@@ -16,6 +18,7 @@ use crate::utils::{Claim, Token};
 
 lazy_static! {
     pub static ref AUTHORIZED_USERS: AuthorizedUsers = AuthorizedUsers::new();
+    pub static ref TRIGGER_DB_UPDATE: AuthTrigger = AuthTrigger::new();
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Hash, Clone)]
@@ -110,11 +113,31 @@ impl AuthorizedUsers {
     }
 }
 
-pub fn fill_auth_from_db(pool: &DbExecutor) -> Result<(), anyhow::Error> {
-    let users: Vec<_> = User::get_authorized_users(pool)?
-        .into_iter()
-        .map(|user| LoggedUser { email: user.email })
-        .collect();
+pub struct AuthTrigger(AtomicBool);
 
-    AUTHORIZED_USERS.merge_users(&users)
+impl AuthTrigger {
+    pub fn new() -> Self {
+        Self(AtomicBool::new(true))
+    }
+
+    pub fn check(&self) -> bool {
+        self.0.compare_and_swap(true, false, Ordering::SeqCst)
+    }
+
+    pub fn set(&self) {
+        self.0.store(true, Ordering::SeqCst)
+    }
+}
+
+pub fn fill_auth_from_db(pool: &DbExecutor) -> Result<(), anyhow::Error> {
+    if TRIGGER_DB_UPDATE.check() {
+        let users: Vec<_> = User::get_authorized_users(pool)?
+            .into_iter()
+            .map(|user| LoggedUser { email: user.email })
+            .collect();
+
+        AUTHORIZED_USERS.merge_users(&users)
+    } else {
+        Ok(())
+    }
 }
