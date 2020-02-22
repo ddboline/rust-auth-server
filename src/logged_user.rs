@@ -7,9 +7,9 @@ use futures::future::{ready, Ready};
 use lazy_static::lazy_static;
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::collections::HashMap;
 use std::env;
+use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::sync::mpsc::Receiver;
 
 use crate::errors::ServiceError;

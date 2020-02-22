@@ -49,16 +49,16 @@ mod tests {
     use uuid::Uuid;
 
     use crate::email_service::send_invitation;
+    use crate::errors::ServiceError;
     use crate::models::Invitation;
 
     #[tokio::test]
     #[ignore]
-    async fn test_send_invitation() {
-        let home_dir = env::var("HOME").expect("No HOME directory...");
+    async fn test_send_invitation() -> Result<(), ServiceError> {
+        let config_dir = dirs::config_dir().expect("No CONFIG directory");
+        let env_file = config_dir.join("rust_auth_server").join("config.env");
 
-        let env_file = format!("{}/.config/rust_auth_server/config.env", home_dir);
-
-        if Path::new(&env_file).exists() {
+        if env_file.exists() {
             dotenv::from_path(&env_file).ok();
         } else if Path::new("config.env").exists() {
             dotenv::from_filename("config.env").ok();
@@ -68,10 +68,12 @@ mod tests {
 
         let new_invitation = Invitation {
             id: Uuid::new_v4(),
-            email: "dboline@mediamath.com".to_string(),
+            email: "ddboline.im@gmail.com".to_string(),
             expires_at: Local::now().naive_local() + Duration::hours(24),
         };
 
-        send_invitation(&new_invitation, "test_url").await.unwrap();
+        send_invitation(&new_invitation, "test_url").await?;
+        assert!(false);
+        Ok(())
     }
 }
