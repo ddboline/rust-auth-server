@@ -141,7 +141,7 @@ pub fn fill_auth_from_db(pool: &DbExecutor) -> Result<(), anyhow::Error> {
     } else {
         AUTHORIZED_USERS.get_users()
     };
-    AUTHORIZED_USERS.merge_users(&users)
+    AUTHORIZED_USERS.merge_users(&users)?;
     debug!("{:?}", *AUTHORIZED_USERS);
     Ok(())
 }
