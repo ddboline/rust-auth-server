@@ -109,7 +109,7 @@ impl AuthorizedUsers {
         Ok(())
     }
 
-    pub fn get_keys(&self) -> Vec<LoggedUser> {
+    pub fn get_users(&self) -> Vec<LoggedUser> {
         self.0.read().keys().cloned().collect()
     }
 }
@@ -133,15 +133,15 @@ impl AuthTrigger {
 
 pub fn fill_auth_from_db(pool: &DbExecutor) -> Result<(), anyhow::Error> {
     debug!("{:?}", *TRIGGER_DB_UPDATE);
-    debug!("{:?}", *AUTHORIZED_USERS);
-    if TRIGGER_DB_UPDATE.check() {
-        let users: Vec<_> = User::get_authorized_users(pool)?
+    let users: Vec<LoggedUser> = if TRIGGER_DB_UPDATE.check() {
+        User::get_authorized_users(pool)?
             .into_iter()
             .map(|user| LoggedUser { email: user.email })
-            .collect();
-
-        AUTHORIZED_USERS.merge_users(&users)
+            .collect()
     } else {
-        Ok(())
-    }
+        AUTHORIZED_USERS.get_users()
+    };
+    AUTHORIZED_USERS.merge_users(&users)
+    debug!("{:?}", *AUTHORIZED_USERS);
+    Ok(())
 }
