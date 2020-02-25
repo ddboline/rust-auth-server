@@ -113,6 +113,7 @@ impl AuthorizedUsers {
     }
 }
 
+#[derive(Debug)]
 pub struct AuthTrigger(AtomicBool);
 
 impl AuthTrigger {
@@ -130,6 +131,8 @@ impl AuthTrigger {
 }
 
 pub fn fill_auth_from_db(pool: &DbExecutor) -> Result<(), anyhow::Error> {
+    debug!("{:?}", *TRIGGER_DB_UPDATE);
+    debug!("{:?}", *AUTHORIZED_USERS);
     if TRIGGER_DB_UPDATE.check() {
         let users: Vec<_> = User::get_authorized_users(pool)?
             .into_iter()
