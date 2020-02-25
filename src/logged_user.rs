@@ -11,6 +11,7 @@ use std::collections::HashMap;
 use std::env;
 use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::sync::mpsc::Receiver;
+use log::debug;
 
 use crate::errors::ServiceError;
 use crate::models::{DbExecutor, User};
