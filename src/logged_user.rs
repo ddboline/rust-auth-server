@@ -5,13 +5,13 @@ use chrono::{DateTime, Utc};
 use futures::executor::block_on;
 use futures::future::{ready, Ready};
 use lazy_static::lazy_static;
+use log::debug;
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::env;
 use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::sync::mpsc::Receiver;
-use log::debug;
 
 use crate::errors::ServiceError;
 use crate::models::{DbExecutor, User};

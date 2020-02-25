@@ -13,7 +13,7 @@ use tokio::time::interval;
 use crate::auth_routes;
 use crate::change_password_routes;
 use crate::invitation_routes;
-use crate::logged_user::{fill_auth_from_db, AUTHORIZED_USERS};
+use crate::logged_user::{fill_auth_from_db, TRIGGER_DB_UPDATE};
 use crate::models::DbExecutor;
 use crate::register_routes;
 use crate::static_files::{
@@ -28,6 +28,7 @@ pub async fn run_auth_server(port: u32) -> std::io::Result<()> {
             i.tick().await;
         }
     }
+    TRIGGER_DB_UPDATE.set();
 
     let config_dir = dirs::config_dir().expect("No CONFIG directory");
     let env_file = config_dir.join("rust_auth_server").join("config.env");
