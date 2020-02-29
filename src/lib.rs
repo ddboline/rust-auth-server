@@ -29,5 +29,5 @@ mod register_routes;
 pub mod rust_auth_server;
 mod schema;
 mod ses_client;
-mod static_files;
+pub mod static_files;
 pub mod utils;
