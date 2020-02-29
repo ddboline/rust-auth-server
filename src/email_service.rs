@@ -73,7 +73,6 @@ mod tests {
         };
 
         send_invitation(&new_invitation, "test_url").await?;
-        assert!(false);
         Ok(())
     }
 }

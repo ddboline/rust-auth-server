@@ -114,7 +114,7 @@ impl AuthorizedUsers {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct AuthTrigger(AtomicBool);
 
 impl AuthTrigger {
