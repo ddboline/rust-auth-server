@@ -6,6 +6,7 @@ use actix_identity::Identity;
 use actix_web::web::{Data, Json, Query};
 use actix_web::{web, Error, HttpResponse, ResponseError};
 use bcrypt::verify;
+use chrono::{DateTime, Utc};
 use diesel::{ExpressionMethods, PgConnection, QueryDsl, RunQueryDsl};
 use lazy_static::lazy_static;
 use log::debug;
@@ -26,7 +27,26 @@ use url::Url;
 
 lazy_static! {
     static ref GOOGLE_CLIENT: CoreClient = get_google_client().expect("Failed to load client");
-    static ref CSRF_TOKENS: RwLock<HashMap<String, Nonce>> = RwLock::new(HashMap::new());
+    static ref CSRF_TOKENS: RwLock<HashMap<String, (Nonce, DateTime<Utc>)>> =
+        RwLock::new(HashMap::new());
+}
+
+pub async fn cleanup_token_map() {
+    let expired_keys: Vec<_> = CSRF_TOKENS
+        .read()
+        .await
+        .iter()
+        .filter_map(|(k, (_, timestamp))| {
+            if (Utc::now() - *timestamp).num_seconds() > 3600 {
+                Some(k.to_string())
+            } else {
+                None
+            }
+        })
+        .collect();
+    for key in expired_keys {
+        CSRF_TOKENS.write().await.remove(&key);
+    }
 }
 
 fn get_google_client() -> Result<CoreClient, ServiceError> {
@@ -60,7 +80,7 @@ fn get_google_client() -> Result<CoreClient, ServiceError> {
     Ok(client)
 }
 
-pub async fn auth_url() -> Result<HttpResponse, ServiceError> {
+async fn get_auth_url() -> Result<Url, ServiceError> {
     let (authorize_url, csrf_state, nonce) = spawn_blocking(move || {
         GOOGLE_CLIENT
             .authorize_url(
@@ -77,7 +97,12 @@ pub async fn auth_url() -> Result<HttpResponse, ServiceError> {
     CSRF_TOKENS
         .write()
         .await
-        .insert(csrf_state.secret().clone(), nonce);
+        .insert(csrf_state.secret().clone(), (nonce, Utc::now()));
+    Ok(authorize_url)
+}
+
+pub async fn auth_url() -> Result<HttpResponse, ServiceError> {
+    let authorize_url = get_auth_url().await?;
     Ok(HttpResponse::Ok().body(authorize_url.into_string()))
 }
 
@@ -95,7 +120,8 @@ pub async fn callback(
     let query = query.into_inner();
     let code = AuthorizationCode::new(query.code.clone());
 
-    if let Some(nonce) = CSRF_TOKENS.read().await.get(&query.state) {
+    let value = CSRF_TOKENS.write().await.remove(&query.state);
+    if let Some((nonce, _)) = value {
         debug!("Nonce {:?}", nonce);
         let token_response =
             spawn_blocking(move || GOOGLE_CLIENT.exchange_code(code).request(http_client))
@@ -108,7 +134,7 @@ pub async fn callback(
             .extra_fields()
             .id_token()
             .expect("Server did not return an ID token")
-            .claims(&id_token_verifier, nonce)
+            .claims(&id_token_verifier, &nonce)
             .map_err(|err| {
                 ServiceError::BlockingError(format!("Failed to obtain claims {:?}", err))
             })?;
@@ -140,5 +166,23 @@ pub async fn callback(
         Err(ServiceError::BadRequest("Oauth failed".into()))
     } else {
         Ok(HttpResponse::Ok().body("Csrf Token invalid"))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use chrono::{Duration, Local};
+    use std::env;
+    use std::path::Path;
+    use uuid::Uuid;
+
+    use crate::email_service::send_invitation;
+    use crate::errors::ServiceError;
+    use crate::models::Invitation;
+
+    #[tokio::test]
+    #[ignore]
+    async fn test_google_openid() {
+        assert!(false);
     }
 }
