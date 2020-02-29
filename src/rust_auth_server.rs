@@ -12,7 +12,7 @@ use tokio::time::interval;
 
 use crate::auth_routes;
 use crate::change_password_routes;
-use crate::google_openid;
+use crate::google_openid::{self, cleanup_token_map};
 use crate::invitation_routes;
 use crate::logged_user::{fill_auth_from_db, TRIGGER_DB_UPDATE};
 use crate::models::DbExecutor;
@@ -26,6 +26,7 @@ pub async fn run_auth_server(port: u32) -> std::io::Result<()> {
         let mut i = interval(time::Duration::from_secs(60));
         loop {
             fill_auth_from_db(&pool).unwrap_or(());
+            cleanup_token_map().await;
             i.tick().await;
         }
     }
