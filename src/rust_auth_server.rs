@@ -12,6 +12,7 @@ use tokio::time::interval;
 
 use crate::auth_routes;
 use crate::change_password_routes;
+use crate::google_openid;
 use crate::invitation_routes;
 use crate::logged_user::{fill_auth_from_db, TRIGGER_DB_UPDATE};
 use crate::models::DbExecutor;
@@ -98,6 +99,12 @@ pub async fn run_auth_server(port: u32) -> std::io::Result<()> {
                     .service(
                         web::resource("/password_change")
                             .route(web::post().to(change_password_routes::change_password_user)),
+                    )
+                    .service(
+                        web::resource("/auth_url").route(web::get().to(google_openid::auth_url)),
+                    )
+                    .service(
+                        web::resource("/callback").route(web::get().to(google_openid::callback)),
                     ),
             )
             // serve static files

@@ -37,6 +37,8 @@ parking_lot = "0.10"
 tokio = {version="0.2", features=["full"]}
 async-trait = "0.1"
 dirs = "2.0"
+openidconnect = {git="https://github.com/ddboline/openidconnect-rs.git", branch="master", features=["futures-03", "reqwest-010"]}
+url = "2.1"
 
 [profile.release]
 lto= true

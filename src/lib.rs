@@ -19,6 +19,7 @@ mod change_password_handler;
 mod change_password_routes;
 mod email_service;
 mod errors;
+mod google_openid;
 mod invitation_handler;
 mod invitation_routes;
 pub mod logged_user;
