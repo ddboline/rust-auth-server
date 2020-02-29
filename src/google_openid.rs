@@ -1,3 +1,6 @@
+use crate::errors::ServiceError;
+use crate::models::{DbExecutor, SlimUser, User};
+use crate::utils::Token;
 use actix::Addr;
 use actix_identity::Identity;
 use actix_web::web::{Data, Json, Query};
@@ -5,6 +8,7 @@ use actix_web::{web, Error, HttpResponse, ResponseError};
 use bcrypt::verify;
 use diesel::{ExpressionMethods, PgConnection, QueryDsl, RunQueryDsl};
 use lazy_static::lazy_static;
+use log::debug;
 use openidconnect::core::{
     CoreClient, CoreIdTokenClaims, CoreIdTokenVerifier, CoreProviderMetadata, CoreResponseType,
 };
@@ -13,20 +17,16 @@ use openidconnect::{
     AuthenticationFlow, AuthorizationCode, ClientId, ClientSecret, CsrfToken, IssuerUrl, Nonce,
     RedirectUrl, Scope,
 };
-use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::env::var;
+use tokio::sync::RwLock;
 use tokio::task::spawn_blocking;
 use url::Url;
 
-use crate::errors::ServiceError;
-use crate::models::{DbExecutor, SlimUser, User};
-use crate::utils::Token;
-
 lazy_static! {
     static ref GOOGLE_CLIENT: CoreClient = get_google_client().expect("Failed to load client");
-    static ref CSRF_TOKENS: RwLock<HashMap<String, String>> = RwLock::new(HashMap::new());
+    static ref CSRF_TOKENS: RwLock<HashMap<String, Nonce>> = RwLock::new(HashMap::new());
 }
 
 fn get_google_client() -> Result<CoreClient, ServiceError> {
@@ -60,21 +60,25 @@ fn get_google_client() -> Result<CoreClient, ServiceError> {
     Ok(client)
 }
 
-pub async fn auth_url() -> HttpResponse {
-    let (authorize_url, csrf_state, nonce) = GOOGLE_CLIENT
-        .authorize_url(
-            AuthenticationFlow::<CoreResponseType>::AuthorizationCode,
-            CsrfToken::new_random,
-            Nonce::new_random,
-        )
-        // This example is requesting access to the "calendar" features and the user's profile.
-        .add_scope(Scope::new("email".to_string()))
-        .add_scope(Scope::new("profile".to_string()))
-        .url();
+pub async fn auth_url() -> Result<HttpResponse, ServiceError> {
+    let (authorize_url, csrf_state, nonce) = spawn_blocking(move || {
+        GOOGLE_CLIENT
+            .authorize_url(
+                AuthenticationFlow::<CoreResponseType>::AuthorizationCode,
+                CsrfToken::new_random,
+                Nonce::new_random,
+            )
+            // This example is requesting access to the "calendar" features and the user's profile.
+            .add_scope(Scope::new("email".to_string()))
+            .add_scope(Scope::new("profile".to_string()))
+            .url()
+    })
+    .await?;
     CSRF_TOKENS
         .write()
-        .insert(csrf_state.secret().clone(), nonce.secret().clone());
-    HttpResponse::Ok().body(authorize_url.into_string())
+        .await
+        .insert(csrf_state.secret().clone(), nonce);
+    Ok(HttpResponse::Ok().body(authorize_url.into_string()))
 }
 
 #[derive(Serialize, Deserialize)]
@@ -91,20 +95,20 @@ pub async fn callback(
     let query = query.into_inner();
     let code = AuthorizationCode::new(query.code.clone());
 
-    if let Some(nonce) = CSRF_TOKENS.read().get(&query.state) {
-        let nonce = Nonce::new(nonce.clone());
-        let token_response = GOOGLE_CLIENT
-            .exchange_code(code)
-            .request(http_client)
-            .map_err(|err| {
-                ServiceError::BlockingError(format!("Failed to obtain token {:?}", err))
-            })?;
+    if let Some(nonce) = CSRF_TOKENS.read().await.get(&query.state) {
+        debug!("Nonce {:?}", nonce);
+        let token_response =
+            spawn_blocking(move || GOOGLE_CLIENT.exchange_code(code).request(http_client))
+                .await?
+                .map_err(|err| {
+                    ServiceError::BlockingError(format!("Failed to obtain token {:?}", err))
+                })?;
         let id_token_verifier: CoreIdTokenVerifier = GOOGLE_CLIENT.id_token_verifier();
         let id_token_claims: &CoreIdTokenClaims = token_response
             .extra_fields()
             .id_token()
             .expect("Server did not return an ID token")
-            .claims(&id_token_verifier, &nonce)
+            .claims(&id_token_verifier, nonce)
             .map_err(|err| {
                 ServiceError::BlockingError(format!("Failed to obtain claims {:?}", err))
             })?;
