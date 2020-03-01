@@ -100,7 +100,7 @@ fn get_auth_url() -> (Url, CsrfToken, Nonce) {
         .url()
 }
 
-pub async fn auth_url(payload: Data<GetAuthUrlData>) -> Result<HttpResponse, ServiceError> {
+pub async fn auth_url(payload: Json<GetAuthUrlData>) -> Result<HttpResponse, ServiceError> {
     let final_url = payload.into_inner().final_url.clone();
     let (authorize_url, csrf_state, nonce) = spawn_blocking(move || get_auth_url()).await?;
     CSRF_TOKENS.write().await.insert(
