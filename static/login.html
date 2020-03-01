@@ -70,6 +70,7 @@
       location.replace(xmlhttp.responseText);
     }
     xmlhttp.open("POST", url, true);
+    xmlhttp.setRequestHeader("Content-Type", "application/json");
     xmlhttp.send(data);
   }
 </script>
