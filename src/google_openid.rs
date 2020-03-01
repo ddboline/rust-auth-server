@@ -27,8 +27,13 @@ use url::Url;
 
 lazy_static! {
     static ref GOOGLE_CLIENT: CoreClient = get_google_client().expect("Failed to load client");
-    static ref CSRF_TOKENS: RwLock<HashMap<String, (Nonce, DateTime<Utc>)>> =
-        RwLock::new(HashMap::new());
+    static ref CSRF_TOKENS: RwLock<HashMap<String, CrsfTokenCache>> = RwLock::new(HashMap::new());
+}
+
+struct CrsfTokenCache {
+    nonce: Nonce,
+    final_url: Url,
+    timestamp: DateTime<Utc>,
 }
 
 pub async fn cleanup_token_map() {
@@ -36,8 +41,8 @@ pub async fn cleanup_token_map() {
         .read()
         .await
         .iter()
-        .filter_map(|(k, (_, timestamp))| {
-            if (Utc::now() - *timestamp).num_seconds() > 3600 {
+        .filter_map(|(k, t)| {
+            if (Utc::now() - t.timestamp).num_seconds() > 3600 {
                 Some(k.to_string())
             } else {
                 None
@@ -80,29 +85,32 @@ fn get_google_client() -> Result<CoreClient, ServiceError> {
     Ok(client)
 }
 
-async fn get_auth_url() -> Result<Url, ServiceError> {
-    let (authorize_url, csrf_state, nonce) = spawn_blocking(move || {
-        GOOGLE_CLIENT
-            .authorize_url(
-                AuthenticationFlow::<CoreResponseType>::AuthorizationCode,
-                CsrfToken::new_random,
-                Nonce::new_random,
-            )
-            // This example is requesting access to the "calendar" features and the user's profile.
-            .add_scope(Scope::new("email".to_string()))
-            .add_scope(Scope::new("profile".to_string()))
-            .url()
-    })
-    .await?;
-    CSRF_TOKENS
-        .write()
-        .await
-        .insert(csrf_state.secret().clone(), (nonce, Utc::now()));
-    Ok(authorize_url)
+pub struct GetAuthUrlData {
+    final_url: Url,
 }
 
-pub async fn auth_url() -> Result<HttpResponse, ServiceError> {
-    let authorize_url = get_auth_url().await?;
+fn get_auth_url() -> (Url, CsrfToken, Nonce) {
+    GOOGLE_CLIENT
+        .authorize_url(
+            AuthenticationFlow::<CoreResponseType>::AuthorizationCode,
+            CsrfToken::new_random,
+            Nonce::new_random,
+        )
+        .add_scope(Scope::new("email".to_string()))
+        .url()
+}
+
+pub async fn auth_url(payload: Data<GetAuthUrlData>) -> Result<HttpResponse, ServiceError> {
+    let final_url = payload.into_inner().final_url.clone();
+    let (authorize_url, csrf_state, nonce) = spawn_blocking(move || get_auth_url()).await?;
+    CSRF_TOKENS.write().await.insert(
+        csrf_state.secret().clone(),
+        CrsfTokenCache {
+            nonce,
+            final_url,
+            timestamp: Utc::now(),
+        },
+    );
     Ok(HttpResponse::Ok().body(authorize_url.into_string()))
 }
 
@@ -121,7 +129,10 @@ pub async fn callback(
     let code = AuthorizationCode::new(query.code.clone());
 
     let value = CSRF_TOKENS.write().await.remove(&query.state);
-    if let Some((nonce, _)) = value {
+    if let Some(CrsfTokenCache {
+        nonce, final_url, ..
+    }) = value
+    {
         debug!("Nonce {:?}", nonce);
         let token_response =
             spawn_blocking(move || GOOGLE_CLIENT.exchange_code(code).request(http_client))
@@ -160,7 +171,13 @@ pub async fn callback(
             if let Some(user) = user? {
                 let token = Token::create_token(&user)?;
                 id.remember(token.into());
-                return Ok(HttpResponse::Ok().json(user));
+                let body = format!(
+                    "{}'{}'{}",
+                    r#"<script>!function(){let url = "#,
+                    final_url,
+                    r#";location.replace(url);}();</script>"#
+                );
+                return Ok(HttpResponse::Ok().body(body));
             }
         }
         Err(ServiceError::BadRequest("Oauth failed".into()))
@@ -196,7 +213,9 @@ mod tests {
 
         let url = get_auth_url().await?;
         assert_eq!(url.domain(), Some("accounts.google.com"));
-        assert!(url.as_str().contains("redirect_uri=https%3A%2F%2Fwww.ddboline.net%2Fapi%2Fcallback"));
+        assert!(url
+            .as_str()
+            .contains("redirect_uri=https%3A%2F%2Fwww.ddboline.net%2Fapi%2Fcallback"));
         assert!(url.as_str().contains("scope=openid+email+profile"));
         assert!(url.as_str().contains("response_type=code"));
         Ok(())
