@@ -102,8 +102,9 @@ fn get_auth_url() -> (Url, CsrfToken, Nonce) {
 }
 
 pub async fn auth_url(payload: Json<GetAuthUrlData>) -> Result<HttpResponse, ServiceError> {
+    let payload = payload.into_inner();
+    debug!("{:?}", payload);
     let final_url: Url = payload
-        .into_inner()
         .final_url
         .parse()
         .map_err(|err| ServiceError::BlockingError(format!("Failed to parse url {:?}", err)))?;
