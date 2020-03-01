@@ -103,7 +103,7 @@ fn get_auth_url() -> (Url, CsrfToken, Nonce) {
 
 pub async fn auth_url(payload: Json<GetAuthUrlData>) -> Result<HttpResponse, ServiceError> {
     let payload = payload.into_inner();
-    debug!("{:?}", payload);
+    debug!("{:?}", payload.final_url);
     let final_url: Url = payload
         .final_url
         .parse()
