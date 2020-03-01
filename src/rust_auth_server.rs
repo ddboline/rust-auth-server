@@ -1,24 +1,20 @@
 use actix::{Addr, SyncArbiter};
 use actix_identity::{CookieIdentityPolicy, IdentityService};
-use actix_web::middleware::Logger;
-use actix_web::{web, App, HttpServer};
+use actix_web::{middleware::Logger, web, App, HttpServer};
 use chrono::Duration;
 use diesel::{r2d2::ConnectionManager, PgConnection};
 use dotenv::dotenv;
-use std::env;
-use std::path::Path;
-use std::time;
+use std::{env, path::Path, time};
 use tokio::time::interval;
 
-use crate::auth_routes;
-use crate::change_password_routes;
-use crate::google_openid::{self, cleanup_token_map};
-use crate::invitation_routes;
-use crate::logged_user::{fill_auth_from_db, TRIGGER_DB_UPDATE};
-use crate::models::DbExecutor;
-use crate::register_routes;
-use crate::static_files::{
-    change_password, index_html, login_html, main_css, main_js, register_html,
+use crate::{
+    auth_routes, change_password_routes,
+    google_openid::{self, cleanup_token_map},
+    invitation_routes,
+    logged_user::{fill_auth_from_db, TRIGGER_DB_UPDATE},
+    models::DbExecutor,
+    register_routes,
+    static_files::{change_password, index_html, login_html, main_css, main_js, register_html},
 };
 
 pub async fn run_auth_server(port: u32) -> std::io::Result<()> {

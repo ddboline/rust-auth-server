@@ -1,13 +1,18 @@
 use actix::Addr;
 use actix_identity::Identity;
-use actix_web::web::{Data, Json};
-use actix_web::{web, Error, HttpRequest, HttpResponse, Responder, ResponseError};
+use actix_web::{
+    web,
+    web::{Data, Json},
+    Error, HttpRequest, HttpResponse, Responder, ResponseError,
+};
 use futures::Future;
 
-use crate::auth_handler::AuthData;
-use crate::logged_user::LoggedUser;
-use crate::models::{DbExecutor, HandleRequest};
-use crate::utils::Token;
+use crate::{
+    auth_handler::AuthData,
+    logged_user::LoggedUser,
+    models::{DbExecutor, HandleRequest},
+    utils::Token,
+};
 
 pub async fn login(
     auth_data: Json<AuthData>,

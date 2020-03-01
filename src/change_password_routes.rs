@@ -1,12 +1,17 @@
 use actix::Addr;
-use actix_web::web::{Data, Json};
-use actix_web::{web, Error, HttpResponse, ResponseError};
+use actix_web::{
+    web,
+    web::{Data, Json},
+    Error, HttpResponse, ResponseError,
+};
 use futures::Future;
 use maplit::hashmap;
 
-use crate::change_password_handler::{ChangePassword, UserData};
-use crate::logged_user::LoggedUser;
-use crate::models::{DbExecutor, HandleRequest};
+use crate::{
+    change_password_handler::{ChangePassword, UserData},
+    logged_user::LoggedUser,
+    models::{DbExecutor, HandleRequest},
+};
 
 pub async fn change_password_user(
     logged_user: LoggedUser,

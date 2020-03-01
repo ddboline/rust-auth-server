@@ -6,8 +6,7 @@ use log::debug;
 use serde::{Deserialize, Serialize};
 use std::env;
 
-use crate::errors::ServiceError;
-use crate::models::SlimUser;
+use crate::{errors::ServiceError, models::SlimUser};
 
 const DEFAULT_ALGORITHM: Algorithm = Algorithm::HS256;
 

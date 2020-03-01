@@ -1,12 +1,17 @@
 use actix::Addr;
-use actix_web::web::{Data, Json};
-use actix_web::{web, Error, HttpResponse, ResponseError};
+use actix_web::{
+    web,
+    web::{Data, Json},
+    Error, HttpResponse, ResponseError,
+};
 use futures::future::Future;
 use serde::{Deserialize, Serialize};
 use std::env;
 
-use crate::invitation_handler::CreateInvitation;
-use crate::models::{DbExecutor, HandleRequest};
+use crate::{
+    invitation_handler::CreateInvitation,
+    models::{DbExecutor, HandleRequest},
+};
 
 pub async fn register_email(
     signup_invitation: Json<CreateInvitation>,

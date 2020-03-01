@@ -1,20 +1,21 @@
 use actix_identity::Identity;
-use actix_web::FromRequest;
-use actix_web::{dev::Payload, Error, HttpRequest};
+use actix_web::{dev::Payload, Error, FromRequest, HttpRequest};
 use async_trait::async_trait;
 use bcrypt::verify;
 use diesel::{ExpressionMethods, PgConnection, QueryDsl, RunQueryDsl};
-use futures::executor::block_on;
-use futures::future::{ready, Ready};
+use futures::{
+    executor::block_on,
+    future::{ready, Ready},
+};
 use serde::{Deserialize, Serialize};
-use std::future::Future;
-use std::pin::Pin;
-use std::task::Poll;
+use std::{future::Future, pin::Pin, task::Poll};
 use tokio::task::spawn_blocking;
 
-use crate::errors::ServiceError;
-use crate::models::{DbExecutor, HandleRequest, SlimUser, User};
-use crate::utils::Token;
+use crate::{
+    errors::ServiceError,
+    models::{DbExecutor, HandleRequest, SlimUser, User},
+    utils::Token,
+};
 
 #[derive(Debug, Deserialize)]
 pub struct AuthData {

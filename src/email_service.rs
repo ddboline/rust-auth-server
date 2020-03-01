@@ -2,9 +2,7 @@ use anyhow::{format_err, Error};
 use log::debug;
 use std::env;
 
-use crate::errors::ServiceError;
-use crate::models::Invitation;
-use crate::ses_client::SesInstance;
+use crate::{errors::ServiceError, models::Invitation, ses_client::SesInstance};
 
 pub async fn send_invitation(
     invitation: &Invitation,
@@ -44,13 +42,10 @@ pub async fn send_invitation(
 #[cfg(test)]
 mod tests {
     use chrono::{Duration, Local};
-    use std::env;
-    use std::path::Path;
+    use std::{env, path::Path};
     use uuid::Uuid;
 
-    use crate::email_service::send_invitation;
-    use crate::errors::ServiceError;
-    use crate::models::Invitation;
+    use crate::{email_service::send_invitation, errors::ServiceError, models::Invitation};
 
     #[tokio::test]
     #[ignore]

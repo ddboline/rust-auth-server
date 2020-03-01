@@ -1,10 +1,15 @@
 use actix::Addr;
-use actix_web::web::{Data, Json, Path};
-use actix_web::{web, Error, HttpResponse, ResponseError};
+use actix_web::{
+    web,
+    web::{Data, Json, Path},
+    Error, HttpResponse, ResponseError,
+};
 use futures::Future;
 
-use crate::models::{DbExecutor, HandleRequest};
-use crate::register_handler::{RegisterUser, UserData};
+use crate::{
+    models::{DbExecutor, HandleRequest},
+    register_handler::{RegisterUser, UserData},
+};
 
 pub async fn register_user(
     invitation_id: Path<String>,

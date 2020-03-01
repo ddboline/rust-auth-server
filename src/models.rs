@@ -2,9 +2,11 @@ use actix::{Actor, SyncContext};
 use anyhow::Error;
 use async_trait::async_trait;
 use chrono::{Local, NaiveDateTime};
-use diesel::pg::PgConnection;
-use diesel::r2d2::{ConnectionManager, Pool};
-use diesel::RunQueryDsl;
+use diesel::{
+    pg::PgConnection,
+    r2d2::{ConnectionManager, Pool},
+    RunQueryDsl,
+};
 use serde::{Deserialize, Serialize};
 use std::convert::From;
 use uuid::Uuid;

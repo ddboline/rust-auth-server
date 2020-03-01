@@ -5,9 +5,11 @@ use serde::{Deserialize, Serialize};
 use tokio::task::spawn_blocking;
 use uuid::Uuid;
 
-use crate::errors::ServiceError;
-use crate::models::{DbExecutor, HandleRequest, Invitation, SlimUser, User};
-use crate::utils::hash_password;
+use crate::{
+    errors::ServiceError,
+    models::{DbExecutor, HandleRequest, Invitation, SlimUser, User},
+    utils::hash_password,
+};
 
 // UserData is used to extract data from a post request by the client
 #[derive(Debug, Deserialize)]
@@ -27,8 +29,10 @@ impl HandleRequest<ChangePassword> for DbExecutor {
     type Result = Result<bool, ServiceError>;
 
     async fn handle(&self, msg: ChangePassword) -> Self::Result {
-        use crate::schema::invitations::dsl::{id, invitations};
-        use crate::schema::users::dsl::{email, password, users};
+        use crate::schema::{
+            invitations::dsl::{id, invitations},
+            users::dsl::{email, password, users},
+        };
 
         let dbex = self.clone();
         spawn_blocking(move || {

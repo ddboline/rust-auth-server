@@ -1,28 +1,31 @@
-use crate::errors::ServiceError;
-use crate::models::{DbExecutor, SlimUser, User};
-use crate::utils::Token;
+use crate::{
+    errors::ServiceError,
+    models::{DbExecutor, SlimUser, User},
+    utils::Token,
+};
 use actix::Addr;
 use actix_identity::Identity;
-use actix_web::web::{Data, Json, Query};
-use actix_web::{web, Error, HttpResponse, ResponseError};
+use actix_web::{
+    web,
+    web::{Data, Json, Query},
+    Error, HttpResponse, ResponseError,
+};
 use bcrypt::verify;
 use chrono::{DateTime, Utc};
 use diesel::{ExpressionMethods, PgConnection, QueryDsl, RunQueryDsl};
 use lazy_static::lazy_static;
 use log::debug;
-use openidconnect::core::{
-    CoreClient, CoreIdTokenClaims, CoreIdTokenVerifier, CoreProviderMetadata, CoreResponseType,
-};
-use openidconnect::reqwest::http_client;
 use openidconnect::{
+    core::{
+        CoreClient, CoreIdTokenClaims, CoreIdTokenVerifier, CoreProviderMetadata, CoreResponseType,
+    },
+    reqwest::http_client,
     AuthenticationFlow, AuthorizationCode, ClientId, ClientSecret, CsrfToken, IssuerUrl, Nonce,
     RedirectUrl, Scope,
 };
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::env::var;
-use tokio::sync::RwLock;
-use tokio::task::spawn_blocking;
+use std::{collections::HashMap, env::var};
+use tokio::{sync::RwLock, task::spawn_blocking};
 use url::Url;
 
 lazy_static! {
@@ -195,13 +198,10 @@ pub async fn callback(
 #[cfg(test)]
 mod tests {
     use chrono::{Duration, Local};
-    use std::env;
-    use std::path::Path;
+    use std::{env, path::Path};
     use uuid::Uuid;
 
-    use crate::errors::ServiceError;
-    use crate::google_openid::get_auth_url;
-    use crate::models::Invitation;
+    use crate::{errors::ServiceError, google_openid::get_auth_url, models::Invitation};
 
     #[tokio::test]
     #[ignore]

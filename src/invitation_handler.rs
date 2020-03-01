@@ -6,9 +6,11 @@ use std::env::var;
 use tokio::task::spawn_blocking;
 use uuid::Uuid;
 
-use crate::email_service::send_invitation;
-use crate::errors::ServiceError;
-use crate::models::{DbExecutor, HandleRequest, Invitation};
+use crate::{
+    email_service::send_invitation,
+    errors::ServiceError,
+    models::{DbExecutor, HandleRequest, Invitation},
+};
 
 #[derive(Deserialize)]
 pub struct CreateInvitation {

@@ -1,21 +1,26 @@
 use actix_identity::Identity;
-use actix_web::FromRequest;
-use actix_web::{dev::Payload, Error, HttpRequest};
+use actix_web::{dev::Payload, Error, FromRequest, HttpRequest};
 use chrono::{DateTime, Utc};
-use futures::executor::block_on;
-use futures::future::{ready, Ready};
+use futures::{
+    executor::block_on,
+    future::{ready, Ready},
+};
 use lazy_static::lazy_static;
 use log::debug;
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::env;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::{
+    collections::HashMap,
+    env,
+    sync::atomic::{AtomicBool, Ordering},
+};
 use tokio::sync::mpsc::Receiver;
 
-use crate::errors::ServiceError;
-use crate::models::{DbExecutor, User};
-use crate::utils::{Claim, Token};
+use crate::{
+    errors::ServiceError,
+    models::{DbExecutor, User},
+    utils::{Claim, Token},
+};
 
 lazy_static! {
     pub static ref AUTHORIZED_USERS: AuthorizedUsers = AuthorizedUsers::new();

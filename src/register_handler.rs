@@ -5,10 +5,12 @@ use serde::{Deserialize, Serialize};
 use tokio::task::spawn_blocking;
 use uuid::Uuid;
 
-use crate::errors::ServiceError;
-use crate::logged_user::TRIGGER_DB_UPDATE;
-use crate::models::{DbExecutor, HandleRequest, Invitation, SlimUser, User};
-use crate::utils::hash_password;
+use crate::{
+    errors::ServiceError,
+    logged_user::TRIGGER_DB_UPDATE,
+    models::{DbExecutor, HandleRequest, Invitation, SlimUser, User},
+    utils::hash_password,
+};
 
 // UserData is used to extract data from a post request by the client
 #[derive(Debug, Deserialize)]
@@ -27,8 +29,10 @@ pub struct RegisterUser {
 impl HandleRequest<RegisterUser> for DbExecutor {
     type Result = Result<SlimUser, ServiceError>;
     async fn handle(&self, msg: RegisterUser) -> Self::Result {
-        use crate::schema::invitations::dsl::{id, invitations};
-        use crate::schema::users::dsl::users;
+        use crate::schema::{
+            invitations::dsl::{id, invitations},
+            users::dsl::users,
+        };
 
         // try parsing the string provided by the user as url parameter
         // return early with error that will be converted to ServiceError
