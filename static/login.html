@@ -64,6 +64,7 @@
   function openIdConnectLogin() {
     let url = "/api/auth_url"
     let data = JSON.stringify({"final_url": window.location.href});
+    console.log("data ", data);
     let xmlhttp = new XMLHttpRequest();
     xmlhttp.onload = function() {
       location.replace(xmlhttp.responseText);
