@@ -85,6 +85,7 @@ fn get_google_client() -> Result<CoreClient, ServiceError> {
     Ok(client)
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct GetAuthUrlData {
     final_url: Url,
 }
