@@ -102,7 +102,7 @@ pub async fn run_auth_server(port: u32) -> std::io::Result<()> {
                             .route(web::post().to(change_password_routes::change_password_user)),
                     )
                     .service(
-                        web::resource("/auth_url").route(web::get().to(google_openid::auth_url)),
+                        web::resource("/auth_url").route(web::post().to(google_openid::auth_url)),
                     )
                     .service(
                         web::resource("/callback").route(web::get().to(google_openid::callback)),
