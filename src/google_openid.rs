@@ -87,7 +87,7 @@ fn get_google_client() -> Result<CoreClient, ServiceError> {
 
 #[derive(Serialize, Deserialize)]
 pub struct GetAuthUrlData {
-    final_url: Url,
+    final_url: String,
 }
 
 fn get_auth_url() -> (Url, CsrfToken, Nonce) {
@@ -102,7 +102,11 @@ fn get_auth_url() -> (Url, CsrfToken, Nonce) {
 }
 
 pub async fn auth_url(payload: Json<GetAuthUrlData>) -> Result<HttpResponse, ServiceError> {
-    let final_url = payload.into_inner().final_url.clone();
+    let final_url: Url = payload
+        .into_inner()
+        .final_url
+        .parse()
+        .map_err(|err| ServiceError::BlockingError(format!("Failed to parse url {:?}", err)))?;
     let (authorize_url, csrf_state, nonce) = spawn_blocking(move || get_auth_url()).await?;
     CSRF_TOKENS.write().await.insert(
         csrf_state.secret().clone(),
