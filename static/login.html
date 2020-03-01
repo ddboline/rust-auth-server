@@ -68,7 +68,6 @@
     let xmlhttp = new XMLHttpRequest();
     xmlhttp.onload = function() {
       location.replace(xmlhttp.responseText);
-      window.close();
     }
     xmlhttp.open("POST", url, true);
     xmlhttp.setRequestHeader("Content-Type", "application/json");
