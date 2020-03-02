@@ -217,7 +217,7 @@ mod tests {
             dotenv::dotenv().ok();
         }
 
-        let url = get_auth_url();
+        let (url, _, _) = get_auth_url();
         assert_eq!(url.domain(), Some("accounts.google.com"));
         assert!(url
             .as_str()
