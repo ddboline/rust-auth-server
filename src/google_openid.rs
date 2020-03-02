@@ -222,7 +222,7 @@ mod tests {
         assert!(url
             .as_str()
             .contains("redirect_uri=https%3A%2F%2Fwww.ddboline.net%2Fapi%2Fcallback"));
-        assert!(url.as_str().contains("scope=openid+email+profile"));
+        assert!(url.as_str().contains("scope=openid+email"));
         assert!(url.as_str().contains("response_type=code"));
     }
 }
