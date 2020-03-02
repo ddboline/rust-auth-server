@@ -203,9 +203,9 @@ mod tests {
 
     use crate::{errors::ServiceError, google_openid::get_auth_url, models::Invitation};
 
-    #[tokio::test]
+    #[test]
     #[ignore]
-    async fn test_google_openid() -> Result<(), ServiceError> {
+    fn test_google_openid() {
         let config_dir = dirs::config_dir().expect("No CONFIG directory");
         let env_file = config_dir.join("rust_auth_server").join("config.env");
 
@@ -217,13 +217,12 @@ mod tests {
             dotenv::dotenv().ok();
         }
 
-        let url = get_auth_url().await?;
+        let url = get_auth_url();
         assert_eq!(url.domain(), Some("accounts.google.com"));
         assert!(url
             .as_str()
             .contains("redirect_uri=https%3A%2F%2Fwww.ddboline.net%2Fapi%2Fcallback"));
         assert!(url.as_str().contains("scope=openid+email+profile"));
         assert!(url.as_str().contains("response_type=code"));
-        Ok(())
     }
 }
