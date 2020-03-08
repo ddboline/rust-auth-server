@@ -28,6 +28,7 @@ pub async fn login(
         .map_err(Into::into)
 }
 
+#[allow(clippy::needless_pass_by_value)]
 pub fn logout(id: Identity) -> HttpResponse {
     id.forget();
     HttpResponse::Ok().finish()
