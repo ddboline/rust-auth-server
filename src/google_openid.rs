@@ -111,7 +111,7 @@ pub async fn auth_url(payload: Json<GetAuthUrlData>) -> Result<HttpResponse, Ser
         .final_url
         .parse()
         .map_err(|err| ServiceError::BlockingError(format!("Failed to parse url {:?}", err)))?;
-    let (authorize_url, csrf_state, nonce) = spawn_blocking(move || get_auth_url()).await?;
+    let (authorize_url, csrf_state, nonce) = spawn_blocking(get_auth_url).await?;
     CSRF_TOKENS.write().await.insert(
         csrf_state.secret().clone(),
         CrsfTokenCache {
