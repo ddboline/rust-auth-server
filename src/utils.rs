@@ -27,7 +27,7 @@ pub struct Claim {
     iss: String,
     // subject
     sub: String,
-    //issued at
+    // issued at
     iat: i64,
     // expiry
     exp: i64,

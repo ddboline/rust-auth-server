@@ -28,7 +28,8 @@ pub enum ServiceError {
     JoinError(#[from] JoinError),
 }
 
-// impl ResponseError trait allows to convert our errors into http responses with appropriate data
+// impl ResponseError trait allows to convert our errors into http responses
+// with appropriate data
 impl ResponseError for ServiceError {
     fn error_response(&self) -> HttpResponse {
         match *self {

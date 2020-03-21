@@ -50,7 +50,8 @@ impl HandleRequest<RegisterUser> for DbExecutor {
                     if let Some(invitation) = result.pop() {
                         // if invitation is not expired
                         if invitation.expires_at > Local::now().naive_local() {
-                            // try hashing the password, else return the error that will be converted to ServiceError
+                            // try hashing the password, else return the error that will be
+                            // converted to ServiceError
                             let password: String = hash_password(&msg.password)?;
                             let user = User::from_details(invitation.email, password);
                             let inserted_user: User =

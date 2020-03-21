@@ -24,7 +24,8 @@ impl HandleRequest<CreateInvitation> for DbExecutor {
     async fn handle(&self, msg: CreateInvitation) -> Self::Result {
         use crate::schema::invitations::dsl::invitations;
 
-        // creating a new Invitation object with expired at time that is 24 hours from now
+        // creating a new Invitation object with expired at time that is 24 hours from
+        // now
         let new_invitation = Invitation {
             id: Uuid::new_v4(),
             email: msg.email,
