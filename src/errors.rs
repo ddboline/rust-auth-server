@@ -6,7 +6,7 @@ use r2d2::Error as R2D2Error;
 use std::{convert::From, fmt::Debug};
 use thiserror::Error;
 use tokio::task::JoinError;
-use uuid::parser::ParseError;
+use uuid::Error as ParseError;
 
 use crate::logged_user::TRIGGER_DB_UPDATE;
 
