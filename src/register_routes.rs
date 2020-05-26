@@ -19,7 +19,7 @@ pub async fn register_user(
     let msg = RegisterUser {
         // into_inner() returns the inner string value from Path
         invitation_id: invitation_id.into_inner(),
-        password: user_data.password.clone(),
+        password: user_data.into_inner().password,
     };
 
     let db_response = db.handle(msg).await;
