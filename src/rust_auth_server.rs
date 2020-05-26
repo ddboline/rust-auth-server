@@ -39,10 +39,6 @@ pub async fn run_auth_server(port: u32) -> std::io::Result<()> {
         dotenv::dotenv().ok();
     }
 
-    std::env::set_var(
-        "RUST_LOG",
-        "simple-auth-server=debug,actix_web=info,actix_server=info",
-    );
     env_logger::init();
 
     let database_url = std::env::var("AUTHDB").expect("DATABASE_URL must be set");
