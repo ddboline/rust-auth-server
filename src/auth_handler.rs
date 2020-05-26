@@ -34,20 +34,15 @@ impl HandleRequest<AuthData> for DbExecutor {
         spawn_blocking(move || {
             let conn = dbex.0.get()?;
             let email_ = msg.email.clone();
-            let mut items = users.filter(email.eq(&email_)).load::<User>(&conn)?;
-
-            if let Some(user) = items.pop() {
-                if let Ok(matching) = verify(&msg.password, &user.password) {
-                    if matching {
-                        let user: SlimUser = user.into();
-                        let token = Token::create_token(&user)?;
-                        return Ok((user, token));
-                    }
-                }
+            let user = users.filter(email.eq(&email_)).first::<User>(&conn)?;
+            match verify(&msg.password, &user.password) {
+                Ok(true) => {
+                    let user: SlimUser = user.into();
+                    let token = Token::create_token(&user)?;
+                    Ok((user, token))
+                },
+                _ => Err(ServiceError::BadRequest("Username and Password don't match".into())),
             }
-            Err(ServiceError::BadRequest(
-                "Username and Password don't match".into(),
-            ))
         })
         .await?
     }
