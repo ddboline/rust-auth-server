@@ -37,7 +37,7 @@ struct CrsfTokenCache {
 
 fn get_random_string() -> String {
     let random_bytes: Vec<u8> = (0..16).map(|_| thread_rng().gen::<u8>()).collect();
-    encode_config(&random_bytes, URL_SAFE_NO_PAD).into()
+    encode_config(&random_bytes, URL_SAFE_NO_PAD)
 }
 
 pub async fn cleanup_token_map() {
@@ -84,16 +84,15 @@ pub struct GetAuthUrlData {
     final_url: String,
 }
 
-fn get_auth_url(client: &DiscoveredClient) -> (Url, String, String) {
-    let csrf = get_random_string();
-    let nonce = get_random_string();
-    let url = client.auth_url(&Options {
+fn get_auth_url(client: &DiscoveredClient) -> (Url, Options) {
+    let options = Options {
         scope: Some("email".into()),
-        state: Some(csrf.clone()),
-        nonce: Some(nonce.clone()),
+        state: Some(get_random_string()),
+        nonce: Some(get_random_string()),
         ..Default::default()
-    });
-    (url, csrf, nonce)
+    };
+    let url = client.auth_url(&options);
+    (url, options)
 }
 
 pub async fn auth_url(
@@ -106,8 +105,11 @@ pub async fn auth_url(
         .final_url
         .parse()
         .map_err(|err| ServiceError::BlockingError(format!("Failed to parse url {:?}", err)))?;
-    let client = client.clone();
-    let (authorize_url, csrf_state, nonce) = get_auth_url(&client);
+    let (authorize_url, options) = get_auth_url(&client);
+
+    let csrf_state = options.state.clone().expect("No CSRF state");
+    let nonce = options.nonce.clone().expect("No nonce");
+
     CSRF_TOKENS.write().await.insert(
         csrf_state,
         CrsfTokenCache {
@@ -217,7 +219,7 @@ mod tests {
         }
 
         let client = get_google_client().await?;
-        let (url, _, _) = get_auth_url(&client);
+        let (url, _) = get_auth_url(&client);
         assert_eq!(url.domain(), Some("accounts.google.com"));
         assert!(url
             .as_str()
