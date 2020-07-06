@@ -1,15 +1,16 @@
 use actix::{Addr, SyncArbiter};
 use actix_identity::{CookieIdentityPolicy, IdentityService};
 use actix_web::{middleware::Logger, web, App, HttpServer};
+use anyhow::Error;
 use chrono::Duration;
 use diesel::{r2d2::ConnectionManager, PgConnection};
 use dotenv::dotenv;
-use std::{env, path::Path, time};
+use std::{env, path::Path, sync::Arc, time};
 use tokio::time::interval;
 
 use crate::{
     auth_routes, change_password_routes,
-    google_openid::{self, cleanup_token_map},
+    google_openid::{self, cleanup_token_map, get_google_client, GoogleClient},
     invitation_routes,
     logged_user::{fill_auth_from_db, TRIGGER_DB_UPDATE},
     models::DbExecutor,
@@ -17,7 +18,7 @@ use crate::{
     static_files::{change_password, index_html, login_html, main_css, main_js, register_html},
 };
 
-pub async fn run_auth_server(port: u32) -> std::io::Result<()> {
+pub async fn run_auth_server(port: u32) -> Result<(), Error> {
     async fn _update_db(pool: DbExecutor) {
         let mut i = interval(time::Duration::from_secs(60));
         loop {
@@ -50,6 +51,7 @@ pub async fn run_auth_server(port: u32) -> std::io::Result<()> {
             .build(manager)
             .expect("Failed to create pool."),
     );
+    let openid = Arc::new(get_google_client().await?);
 
     actix_rt::spawn(_update_db(pool.clone()));
 
@@ -60,6 +62,7 @@ pub async fn run_auth_server(port: u32) -> std::io::Result<()> {
 
         App::new()
             .data(pool.clone())
+            .data(openid.clone())
             .wrap(Logger::default())
             .wrap(IdentityService::new(
                 CookieIdentityPolicy::new(secret.as_bytes())
@@ -116,5 +119,6 @@ pub async fn run_auth_server(port: u32) -> std::io::Result<()> {
     })
     .bind(&format!("127.0.0.1:{}", port))?
     .run()
-    .await
+    .await?;
+    Ok(())
 }
