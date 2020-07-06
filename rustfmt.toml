@@ -7,7 +7,7 @@ use_try_shorthand = true
 
 # nightly
 
-normalize_comments = true
-wrap_comments = true
-format_strings = true
-merge_imports = true
+# normalize_comments = true
+# wrap_comments = true
+# format_strings = true
+# merge_imports = true
