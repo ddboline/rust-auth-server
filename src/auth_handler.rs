@@ -40,8 +40,10 @@ impl HandleRequest<AuthData> for DbExecutor {
                     let user: SlimUser = user.into();
                     let token = Token::create_token(&user)?;
                     Ok((user, token))
-                },
-                _ => Err(ServiceError::BadRequest("Username and Password don't match".into())),
+                }
+                _ => Err(ServiceError::BadRequest(
+                    "Username and Password don't match".into(),
+                )),
             }
         })
         .await?

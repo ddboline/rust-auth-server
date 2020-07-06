@@ -10,33 +10,34 @@ use actix_web::{
     web::{Data, Json, Query},
     Error, HttpResponse, ResponseError,
 };
+use base64::{encode_config, URL_SAFE_NO_PAD};
 use bcrypt::verify;
 use chrono::{DateTime, Utc};
 use diesel::{ExpressionMethods, PgConnection, QueryDsl, RunQueryDsl};
 use lazy_static::lazy_static;
 use log::debug;
-use openidconnect::{
-    core::{
-        CoreClient, CoreIdTokenClaims, CoreIdTokenVerifier, CoreProviderMetadata, CoreResponseType,
-    },
-    reqwest::http_client,
-    AuthenticationFlow, AuthorizationCode, ClientId, ClientSecret, CsrfToken, IssuerUrl, Nonce,
-    RedirectUrl, Scope,
-};
+use openid::{DiscoveredClient, Options, Token as OpenIdToken, Userinfo};
+use rand::{thread_rng, Rng};
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, env::var};
+use std::{collections::HashMap, env::var, sync::Arc};
 use tokio::{sync::RwLock, task::spawn_blocking};
 use url::Url;
 
 lazy_static! {
-    static ref GOOGLE_CLIENT: CoreClient = get_google_client().expect("Failed to load client");
     static ref CSRF_TOKENS: RwLock<HashMap<String, CrsfTokenCache>> = RwLock::new(HashMap::new());
 }
 
+pub type GoogleClient = Arc<DiscoveredClient>;
+
 struct CrsfTokenCache {
-    nonce: Nonce,
+    nonce: String,
     final_url: Url,
     timestamp: DateTime<Utc>,
+}
+
+fn get_random_string() -> String {
+    let random_bytes: Vec<u8> = (0..16).map(|_| thread_rng().gen::<u8>()).collect();
+    encode_config(&random_bytes, URL_SAFE_NO_PAD).into()
 }
 
 pub async fn cleanup_token_map() {
@@ -57,34 +58,24 @@ pub async fn cleanup_token_map() {
     }
 }
 
-fn get_google_client() -> Result<CoreClient, ServiceError> {
-    let google_client_id = ClientId::new(
-        var("GOOGLE_CLIENT_ID").expect("Missing the GOOGLE_CLIENT_ID environment variable."),
-    );
-    let google_client_secret = ClientSecret::new(
-        var("GOOGLE_CLIENT_SECRET")
-            .expect("Missing the GOOGLE_CLIENT_SECRET environment variable."),
-    );
-    let issuer_url =
-        IssuerUrl::new("https://accounts.google.com".to_string()).expect("Invalid issuer URL");
-
-    // Fetch Google's OpenID Connect discovery document.
-    let provider_metadata =
-        CoreProviderMetadata::discover(&issuer_url, http_client).map_err(|err| {
-            ServiceError::BlockingError(format!("Failed to discover OpenID Provider {:?}", err))
-        })?;
+pub async fn get_google_client() -> Result<DiscoveredClient, ServiceError> {
+    let google_client_id =
+        var("GOOGLE_CLIENT_ID").expect("Missing the GOOGLE_CLIENT_ID environment variable.");
+    let google_client_secret = var("GOOGLE_CLIENT_SECRET")
+        .expect("Missing the GOOGLE_CLIENT_SECRET environment variable.");
+    let issuer_url = Url::parse("https://accounts.google.com").expect("Invalid issuer URL");
 
     let domain = var("DOMAIN").unwrap_or_else(|_| "localhost".to_string());
     let redirect_url = format!("https://{}/api/callback", domain);
-    let redirect_url = Url::parse(&redirect_url).expect("failed to parse url");
 
-    // Set up the config for the Google OAuth2 process.
-    let client = CoreClient::from_provider_metadata(
-        provider_metadata,
+    let client = DiscoveredClient::discover(
         google_client_id,
-        Some(google_client_secret),
+        google_client_secret,
+        Some(redirect_url),
+        issuer_url,
     )
-    .set_redirect_uri(RedirectUrl::new(redirect_url.into_string()).expect("Invalid redirect URL"));
+    .await?;
+
     Ok(client)
 }
 
@@ -93,27 +84,32 @@ pub struct GetAuthUrlData {
     final_url: String,
 }
 
-fn get_auth_url() -> (Url, CsrfToken, Nonce) {
-    GOOGLE_CLIENT
-        .authorize_url(
-            AuthenticationFlow::<CoreResponseType>::AuthorizationCode,
-            CsrfToken::new_random,
-            Nonce::new_random,
-        )
-        .add_scope(Scope::new("email".to_string()))
-        .url()
+fn get_auth_url(client: &DiscoveredClient) -> (Url, String, String) {
+    let csrf = get_random_string();
+    let nonce = get_random_string();
+    let url = client.auth_url(&Options {
+        scope: Some("email".into()),
+        state: Some(csrf.clone()),
+        nonce: Some(nonce.clone()),
+        ..Default::default()
+    });
+    (url, csrf, nonce)
 }
 
-pub async fn auth_url(payload: Json<GetAuthUrlData>) -> Result<HttpResponse, ServiceError> {
+pub async fn auth_url(
+    payload: Json<GetAuthUrlData>,
+    client: Data<GoogleClient>,
+) -> Result<HttpResponse, ServiceError> {
     let payload = payload.into_inner();
     debug!("{:?}", payload.final_url);
     let final_url: Url = payload
         .final_url
         .parse()
         .map_err(|err| ServiceError::BlockingError(format!("Failed to parse url {:?}", err)))?;
-    let (authorize_url, csrf_state, nonce) = spawn_blocking(get_auth_url).await?;
+    let client = client.clone();
+    let (authorize_url, csrf_state, nonce) = spawn_blocking(move || get_auth_url(&client)).await?;
     CSRF_TOKENS.write().await.insert(
-        csrf_state.secret().clone(),
+        csrf_state,
         CrsfTokenCache {
             nonce,
             final_url,
@@ -129,13 +125,31 @@ pub struct CallbackQuery {
     state: String,
 }
 
+async fn request_token(
+    client: &DiscoveredClient,
+    code: &str,
+    nonce: &str,
+) -> Result<(OpenIdToken, Userinfo), ServiceError> {
+    let mut token: OpenIdToken = client.request_token(&code).await?.into();
+    if let Some(mut id_token) = token.id_token.as_mut() {
+        client.decode_token(&mut id_token)?;
+        client.validate_token(&id_token, Some(&nonce), None)?;
+    } else {
+        return Err(ServiceError::BadRequest("Oauth failed".into()));
+    }
+
+    let userinfo = client.request_userinfo(&token).await?;
+    Ok((token, userinfo))
+}
+
 pub async fn callback(
     query: Query<CallbackQuery>,
     db: Data<DbExecutor>,
+    client: Data<GoogleClient>,
     id: Identity,
 ) -> Result<HttpResponse, ServiceError> {
     let query = query.into_inner();
-    let code = AuthorizationCode::new(query.code.clone());
+    let code = query.code.clone();
 
     let value = CSRF_TOKENS.write().await.remove(&query.state);
     if let Some(CrsfTokenCache {
@@ -143,23 +157,10 @@ pub async fn callback(
     }) = value
     {
         debug!("Nonce {:?}", nonce);
-        let token_response =
-            spawn_blocking(move || GOOGLE_CLIENT.exchange_code(code).request(http_client))
-                .await?
-                .map_err(|err| {
-                    ServiceError::BlockingError(format!("Failed to obtain token {:?}", err))
-                })?;
-        let id_token_verifier: CoreIdTokenVerifier = GOOGLE_CLIENT.id_token_verifier();
-        let id_token_claims: &CoreIdTokenClaims = token_response
-            .extra_fields()
-            .id_token()
-            .expect("Server did not return an ID token")
-            .claims(&id_token_verifier, &nonce)
-            .map_err(|err| {
-                ServiceError::BlockingError(format!("Failed to obtain claims {:?}", err))
-            })?;
 
-        if let Some(user_email) = id_token_claims.email() {
+        let (_, userinfo) = request_token(&client, &code, &nonce).await?;
+
+        if let Some(user_email) = &userinfo.email {
             use crate::schema::users::dsl::{email, users};
 
             let email_ = user_email.as_str().to_string();
@@ -197,15 +198,20 @@ pub async fn callback(
 
 #[cfg(test)]
 mod tests {
+    use anyhow::Error;
     use chrono::{Duration, Local};
     use std::{env, path::Path};
     use uuid::Uuid;
 
-    use crate::{errors::ServiceError, google_openid::get_auth_url, models::Invitation};
+    use crate::{
+        errors::ServiceError,
+        google_openid::{get_auth_url, get_google_client},
+        models::Invitation,
+    };
 
-    #[test]
+    #[tokio::test]
     #[ignore]
-    fn test_google_openid() {
+    async fn test_google_openid() -> Result<(), Error> {
         let config_dir = dirs::config_dir().expect("No CONFIG directory");
         let env_file = config_dir.join("rust_auth_server").join("config.env");
 
@@ -217,12 +223,14 @@ mod tests {
             dotenv::dotenv().ok();
         }
 
-        let (url, _, _) = get_auth_url();
+        let client = get_google_client().await?;
+        let (url, _, _) = get_auth_url(&client);
         assert_eq!(url.domain(), Some("accounts.google.com"));
         assert!(url
             .as_str()
             .contains("redirect_uri=https%3A%2F%2Fwww.ddboline.net%2Fapi%2Fcallback"));
         assert!(url.as_str().contains("scope=openid+email"));
         assert!(url.as_str().contains("response_type=code"));
+        Ok(())
     }
 }

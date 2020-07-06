@@ -2,6 +2,7 @@ use actix_threadpool::BlockingError;
 use actix_web::{error::ResponseError, HttpResponse};
 use derive_more::Display;
 use diesel::result::{DatabaseErrorKind, Error as DBError};
+use openid::error::{ClientError as OpenIdClientError, Error as OpenIdError};
 use r2d2::Error as R2D2Error;
 use std::{convert::From, fmt::Debug};
 use thiserror::Error;
@@ -62,5 +63,17 @@ impl From<ParseError> for ServiceError {
 impl<T: Debug> From<BlockingError<T>> for ServiceError {
     fn from(item: BlockingError<T>) -> Self {
         Self::BlockingError(item.to_string())
+    }
+}
+
+impl From<OpenIdError> for ServiceError {
+    fn from(err: OpenIdError) -> Self {
+        Self::BadRequest(format!("OpenIdError {:?}", err))
+    }
+}
+
+impl From<OpenIdClientError> for ServiceError {
+    fn from(err: OpenIdClientError) -> Self {
+        Self::BadRequest(format!("OpenIdClientError {:?}", err))
     }
 }
