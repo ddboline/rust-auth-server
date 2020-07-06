@@ -89,7 +89,7 @@ fn get_auth_url(client: &DiscoveredClient) -> (Url, Options) {
         scope: Some("email".into()),
         state: Some(get_random_string()),
         nonce: Some(get_random_string()),
-        ..Default::default()
+        ..Options::default()
     };
     let url = client.auth_url(&options);
     (url, options)
