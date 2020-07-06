@@ -125,21 +125,14 @@ pub struct CallbackQuery {
     state: String,
 }
 
-async fn request_token(
+async fn request_userinfo(
     client: &DiscoveredClient,
     code: &str,
     nonce: &str,
-) -> Result<(OpenIdToken, Userinfo), ServiceError> {
-    let mut token: OpenIdToken = client.request_token(&code).await?.into();
-    if let Some(mut id_token) = token.id_token.as_mut() {
-        client.decode_token(&mut id_token)?;
-        client.validate_token(&id_token, Some(&nonce), None)?;
-    } else {
-        return Err(ServiceError::BadRequest("Oauth failed".into()));
-    }
-
+) -> Result<Userinfo, ServiceError> {
+    let token = client.authenticate(code, Some(nonce), None).await?;
     let userinfo = client.request_userinfo(&token).await?;
-    Ok((token, userinfo))
+    Ok(userinfo)
 }
 
 pub async fn callback(
@@ -158,7 +151,7 @@ pub async fn callback(
     {
         debug!("Nonce {:?}", nonce);
 
-        let (_, userinfo) = request_token(&client, &code, &nonce).await?;
+        let userinfo = request_userinfo(&client, &code, &nonce).await?;
 
         if let Some(user_email) = &userinfo.email {
             use crate::schema::users::dsl::{email, users};
