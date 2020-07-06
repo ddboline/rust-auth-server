@@ -107,7 +107,7 @@ pub async fn auth_url(
         .parse()
         .map_err(|err| ServiceError::BlockingError(format!("Failed to parse url {:?}", err)))?;
     let client = client.clone();
-    let (authorize_url, csrf_state, nonce) = spawn_blocking(move || get_auth_url(&client)).await?;
+    let (authorize_url, csrf_state, nonce) = get_auth_url(&client);
     CSRF_TOKENS.write().await.insert(
         csrf_state,
         CrsfTokenCache {
