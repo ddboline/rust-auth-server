@@ -25,8 +25,8 @@ serde_json="1.0"
 serde = { version="1.0", features=["derive"] }
 uuid = { version = "0.8", features = ["serde", "v4"] }
 log = "0.4"
-rusoto_core = {version = "0.44", default_features = false, features=["rustls"]}
-rusoto_ses = {version = "0.44", default_features = false, features=["rustls"]}
+rusoto_core = {version = "0.45", default_features = false, features=["rustls"]}
+rusoto_ses = {version = "0.45", default_features = false, features=["rustls"]}
 sts_profile_auth = "0.5"
 maplit = "1.0"
 anyhow = "1.0"

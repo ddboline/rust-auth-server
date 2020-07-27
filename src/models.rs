@@ -5,7 +5,7 @@ use chrono::{Local, NaiveDateTime};
 use diesel::{
     pg::PgConnection,
     r2d2::{ConnectionManager, Pool},
-    RunQueryDsl,
+    ExpressionMethods, QueryDsl, RunQueryDsl,
 };
 use serde::{Deserialize, Serialize};
 use std::convert::From;
@@ -47,6 +47,15 @@ impl User {
             password,
             created_at: Local::now().naive_local(),
         }
+    }
+
+    pub fn get_by_email(email_: &str, pool: &DbExecutor) -> Result<Self, Error> {
+        use crate::schema::users::dsl::{email, users};
+        let conn = pool.0.get()?;
+        users
+            .filter(email.eq(email_))
+            .first(&conn)
+            .map_err(Into::into)
     }
 }
 

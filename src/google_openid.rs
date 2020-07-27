@@ -27,7 +27,7 @@ lazy_static! {
     static ref CSRF_TOKENS: RwLock<HashMap<String, CrsfTokenCache>> = RwLock::new(HashMap::new());
 }
 
-pub type GoogleClient = Arc<DiscoveredClient>;
+pub type GoogleClient = RwLock<Arc<DiscoveredClient>>;
 
 struct CrsfTokenCache {
     nonce: String,
@@ -105,6 +105,7 @@ pub async fn auth_url(
         .final_url
         .parse()
         .map_err(|err| ServiceError::BlockingError(format!("Failed to parse url {:?}", err)))?;
+    let client = client.read().await.clone();
     let (authorize_url, options) = get_auth_url(&client);
 
     let csrf_state = options.state.clone().expect("No CSRF state");
@@ -153,27 +154,32 @@ pub async fn callback(
     {
         debug!("Nonce {:?}", nonce);
 
-        let userinfo = request_userinfo(&client, &code, &nonce).await?;
+        let userinfo = match request_userinfo(&client.read().await.clone(), &code, &nonce).await {
+            Ok(userinfo) => userinfo,
+            Err(e) => {
+                let new_client = get_google_client().await?;
+                *client.write().await = Arc::new(new_client);
+                return Err(e);
+            }
+        };
 
         if let Some(user_email) = &userinfo.email {
-            use crate::schema::users::dsl::{email, users};
-
             let email_ = user_email.as_str().to_string();
-            let dbex = db.clone();
-            let user: Result<Option<_>, ServiceError> = spawn_blocking(move || {
-                let conn = dbex.0.get()?;
 
-                let mut items = users.filter(email.eq(&email_)).load::<User>(&conn)?;
+            let user = {
+                let dbex = db.clone();
+                spawn_blocking(move || {
+                    if let Ok(user) = User::get_by_email(&email_, &dbex) {
+                        let user: SlimUser = user.into();
+                        Some(user)
+                    } else {
+                        None
+                    }
+                })
+                .await?
+            };
 
-                if let Some(user) = items.pop() {
-                    let user: SlimUser = user.into();
-                    Ok(Some(user))
-                } else {
-                    Ok(None)
-                }
-            })
-            .await?;
-            if let Some(user) = user? {
+            if let Some(user) = user {
                 let token = Token::create_token(&user)?;
                 id.remember(token.into());
                 let body = format!(

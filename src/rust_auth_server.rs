@@ -6,7 +6,7 @@ use chrono::Duration;
 use diesel::{r2d2::ConnectionManager, PgConnection};
 use dotenv::dotenv;
 use std::{env, path::Path, sync::Arc, time};
-use tokio::time::interval;
+use tokio::{sync::RwLock, time::interval};
 
 use crate::{
     auth_routes, change_password_routes,
@@ -62,7 +62,7 @@ pub async fn run_auth_server(port: u32) -> Result<(), Error> {
 
         App::new()
             .data(pool.clone())
-            .data(openid.clone())
+            .data(RwLock::new(openid.clone()))
             .wrap(Logger::default())
             .wrap(IdentityService::new(
                 CookieIdentityPolicy::new(secret.as_bytes())
