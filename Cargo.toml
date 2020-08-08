@@ -9,9 +9,7 @@ edition = "2018"
 actix = "0.9"
 actix-rt = "1.1"
 actix-web = "2.0"
-actix-files = "0.2"
 actix-identity = "0.2"
-
 bcrypt = "0.8"
 chrono = { version = "0.4", features = ["serde"] }
 diesel = { version = "1.4", features = ["postgres", "uuid", "r2d2", "chrono", "uuidv07"] }
