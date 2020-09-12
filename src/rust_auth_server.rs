@@ -2,10 +2,10 @@ use actix::{Addr, SyncArbiter};
 use actix_identity::{CookieIdentityPolicy, IdentityService};
 use actix_web::{middleware::Logger, web, App, HttpServer};
 use anyhow::Error;
-use chrono::Duration;
+use std::time::Duration;
 use diesel::{r2d2::ConnectionManager, PgConnection};
 use dotenv::dotenv;
-use std::{env, path::Path, sync::Arc, time};
+use std::{env, path::Path, sync::Arc};
 use tokio::{sync::RwLock, time::interval};
 
 use crate::{
@@ -20,7 +20,7 @@ use crate::{
 
 pub async fn run_auth_server(port: u32) -> Result<(), Error> {
     async fn _update_db(pool: DbExecutor) {
-        let mut i = interval(time::Duration::from_secs(60));
+        let mut i = interval(Duration::from_secs(60));
         loop {
             fill_auth_from_db(&pool).unwrap_or(());
             cleanup_token_map().await;
@@ -69,7 +69,7 @@ pub async fn run_auth_server(port: u32) -> Result<(), Error> {
                     .name("auth")
                     .path("/")
                     .domain(domain.as_str())
-                    .max_age_time(Duration::days(1))
+                    .max_age(24*3600)
                     .secure(false), // this can only be true if you have https
             ))
             // everything under '/api/' route
