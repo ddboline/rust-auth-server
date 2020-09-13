@@ -2,10 +2,9 @@ use actix::{Addr, SyncArbiter};
 use actix_identity::{CookieIdentityPolicy, IdentityService};
 use actix_web::{middleware::Logger, web, App, HttpServer};
 use anyhow::Error;
-use std::time::Duration;
 use diesel::{r2d2::ConnectionManager, PgConnection};
 use dotenv::dotenv;
-use std::{env, path::Path, sync::Arc};
+use std::{env, path::Path, sync::Arc, time::Duration};
 use tokio::{sync::RwLock, time::interval};
 
 use crate::{
